@@ -7,8 +7,8 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 
 # Plugin name
-PLUGIN_NAME="zsh-llmcompletion"
-REPO_URL="https://github.com/Gamma-Software/zsh-llmcompletion"  # Update this with your actual repo URL
+PLUGIN_NAME="zsh-copilot"
+REPO_URL="https://github.com/Gamma-Software/zsh-copilot"  # Update this with your actual repo URL
 
 # Determine ZSH_CUSTOM path
 if [ -z "$ZSH_CUSTOM" ]; then
