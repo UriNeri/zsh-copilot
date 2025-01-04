@@ -1,1 +1,1 @@
-history -c && rm ~/.zsh_history; source zsh-llm.plugin.zsh; source predict-command.zsh
+history -c && rm ~/.zsh_history; source zsh-copilot.zsh;
