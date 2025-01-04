@@ -1,69 +1,37 @@
-# A lightweight Zsh plugin serves as a ChatGPT API frontend, enabling you to interact with ChatGPT directly from the Zsh.
-# https://github.com/Licheam/zsh-ask
-# Copyright (c) 2023-2024 Leachim
-
-#--------------------------------------------------------------------#
-# Global Configuration Variables                                     #
-#--------------------------------------------------------------------#
 
 0=${(%):-%N}
-typeset -g ZSH_ASK_PREFIX=${0:A:h}
+typeset -g ZSH_LLMCOMPLETION_PREFIX=${0:A:h}
 
-(( ! ${+ZSH_ASK_REPO} )) &&
-typeset -g ZSH_ASK_REPO="https://github.com/Licheam/zsh-ask"
+(( ! ${+ZSH_LLMCOMPLETION_REPO} )) &&
+typeset -g ZSH_LLMCOMPLETION_REPO="https://github.com/Gamma-Software/zsh-llmcompletion"
 
 # Get the corresponding endpoint for your desired model.
-(( ! ${+ZSH_ASK_API_URL} )) &&
-typeset -g ZSH_ASK_API_URL="https://api.openai.com/v1/chat/completions"
+(( ! ${+ZSH_LLMCOMPLETION_API_URL} )) &&
+typeset -g ZSH_LLMCOMPLETION_API_URL="https://api.openai.com/v1/chat/completions"
 
 # Fill up your OpenAI api key here.
-(( ! ${+ZSH_ASK_API_KEY} )) &&
-typeset -g ZSH_ASK_API_KEY="sk-xxx"
+if (( ! ${+ZSH_LLMCOMPLETION_API_KEY} )); then
+    echo "Error: ZSH_LLMCOMPLETION_API_KEY is not set."
+    echo "Please reinstall the plugin and follow the setup instructions at:"
+    echo "https://github.com/Gamma-Software/zsh-llmcompletion#installation"
+    return 1
+fi
 
 # Default configurations
-(( ! ${+ZSH_ASK_MODEL} )) &&
-typeset -g ZSH_ASK_MODEL="gpt-3.5-turbo"
-(( ! ${+ZSH_ASK_CONVERSATION} )) &&
-typeset -g ZSH_ASK_CONVERSATION=false
-(( ! ${+ZSH_ASK_INHERITS} )) &&
-typeset -g ZSH_ASK_INHERITS=false
-(( ! ${+ZSH_ASK_MARKDOWN} )) &&
-typeset -g ZSH_ASK_MARKDOWN=false
-(( ! ${+ZSH_ASK_STREAM} )) &&
-typeset -g ZSH_ASK_STREAM=false
-(( ! ${+ZSH_ASK_TOKENS} )) &&
-typeset -g ZSH_ASK_TOKENS=800
-(( ! ${+ZSH_ASK_HISTORY} )) &&
-typeset -g ZSH_ASK_HISTORY=""
-(( ! ${+ZSH_ASK_INITIALROLE} )) &&
-typeset -g ZSH_ASK_INITIALROLE="system"
-(( ! ${+ZSH_ASK_INITIALPROMPT} )) &&
-typeset -g ZSH_ASK_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
+(( ! ${+ZSH_LLMCOMPLETION_MODEL} )) &&
+typeset -g ZSH_LLMCOMPLETION_MODEL="gpt-3.5-turbo"
+(( ! ${+ZSH_LLMCOMPLETION_TOKENS} )) &&
+typeset -g ZSH_LLMCOMPLETION_TOKENS=800
+(( ! ${+ZSH_LLMCOMPLETION_INITIALROLE} )) &&
+typeset -g ZSH_LLMCOMPLETION_INITIALROLE="system"
+(( ! ${+ZSH_LLMCOMPLETION_INITIALPROMPT} )) &&
+typeset -g ZSH_LLMCOMPLETION_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
 
-function _zsh_ask_show_help() {
-  echo "A lightweight Zsh plugin serves as a ChatGPT API frontend, enabling you to interact with ChatGPT directly from the Zsh."
-  echo "Usage: ask [options...]"
-  echo "       ask [options...] '<your-question>'"
-  echo "Options:"
-  echo "  -h                Display this help message."
-  echo "  -v                Display the version number."
-  echo "  -i                Inherits conversation from ZSH_ASK_HISTORY."
-  echo "  -c                Enable conversation."
-  echo "  -f <path_to_file> Enable file as query suffix (testing feature)."
-  echo "  -m                Enable markdown rendering (glow required)."
-  echo "  -M <openai_model> Set OpenAI model to <openai_model>, default sets to gpt-3.5-turbo."
-  echo "                    Models can be found at https://platform.openai.com/docs/models."
-  echo "  -s                Enable streaming (Doesn't work with -m yet)."
-  echo "  -t <max_tokens>   Set max tokens to <max_tokens>, default sets to 800."
-  echo "  -u                Upgrade this plugin."
-  echo "  -r                Print raw output."
-  echo "  -d                Print debug information."
-}
 
-function _zsh_ask_upgrade() {
-  git -C $ZSH_ASK_PREFIX remote set-url origin $ZSH_ASK_REPO
-  if git -C $ZSH_ASK_PREFIX pull; then
-    source $ZSH_ASK_PREFIX/zsh-ask.zsh
+function _zsh_llmcompletion_upgrade() {
+  git -C $ZSH_LLMCOMPLETION_PREFIX remote set-url origin $ZSH_LLMCOMPLETION_REPO
+  if git -C $ZSH_LLMCOMPLETION_PREFIX pull; then
+    source $ZSH_LLMCOMPLETION_PREFIX/zsh-llmcompletion.zsh
     return 0
   else
     echo "Failed to upgrade."
@@ -71,19 +39,15 @@ function _zsh_ask_upgrade() {
   fi
 }
 
-function _zsh_ask_show_version() {
-  cat "$ZSH_ASK_PREFIX/VERSION"
+function _zsh_llmcompletion_show_version() {
+  cat "$ZSH_LLMCOMPLETION_PREFIX/VERSION"
 }
 
-function ask() {
-    local api_url=$ZSH_ASK_API_URL
-    local api_key=$ZSH_ASK_API_KEY
-    local conversation=$ZSH_ASK_CONVERSATION
-    local markdown=$ZSH_ASK_MARKDOWN
-    local stream=$ZSH_ASK_STREAM
-    local tokens=$ZSH_ASK_TOKENS
-    local inherits=$ZSH_ASK_INHERITS
-    local model=$ZSH_ASK_MODEL
+function llmapi() {
+    local api_url=$ZSH_LLMCOMPLETION_API_URL
+    local api_key=$ZSH_LLMCOMPLETION_API_KEY
+    local tokens=$ZSH_LLMCOMPLETION_TOKENS
+    local model=$ZSH_LLMCOMPLETION_MODEL
     local history=""
 
     local usefile=false
@@ -97,11 +61,11 @@ function ask() {
     while getopts ":hvcdmsiurM:f:t:" opt; do
         case $opt in
             h)
-                _zsh_ask_show_help
+                _zsh_llmcompletion_show_help
                 return 0
                 ;;
             v)
-                _zsh_ask_show_version
+                _zsh_llmcompletion_show_version
                 return 0
                 ;;
             u)
@@ -109,20 +73,14 @@ function ask() {
                     echo "git is required for upgrade."
                     return 1
                 fi
-                if _zsh_ask_upgrade; then
+                if _zsh_llmcompletion_upgrade; then
                     return 0
                 else
                     return 1
                 fi
                 ;;
-            c)
-                conversation=true
-                ;;
             d)
                 debug=true
-                ;;
-            i)
-                inherits=true
                 ;;
             t)
                 if ! [[ $OPTARG =~ ^[0-9]+$ ]]; then
@@ -148,16 +106,6 @@ function ask() {
             M)
                 model=$OPTARG
                 ;;
-            m)
-                markdown=true
-                if ! which "glow" > /dev/null; then
-                    echo "glow is required for markdown rendering."
-                    satisfied=false
-                fi
-                ;;
-            s)
-                stream=true
-                ;;
             r)
                 raw=true
                 ;;
@@ -175,14 +123,6 @@ function ask() {
         return 1
     fi
     done
-
-    if $inherits; then
-        history=$ZSH_ASK_HISTORY
-    fi
-
-    if [ "$history" = "" ]; then
-        history='{"role":"'$ZSH_ASK_INITIALROLE'", "content":"'$ZSH_ASK_INITIALPROMPT'"}, '
-    fi
 
     shift $((OPTIND-1))
 
@@ -219,7 +159,7 @@ function ask() {
                     token=${token:6}
                     if ! $raw && delta_text=$(echo -E $token | jq -re '.choices[].delta.role'); then
                         assistant=$(echo -E $token | jq -je '.choices[].delta.role')
-                        echo -n ""
+                        echo -n "\033[0;36m$assistant: \033[0m"
                     fi
                     local delta_text=""
                     if delta_text=$(echo -E $token | jq -re '.choices[].delta.content'); then
@@ -240,7 +180,7 @@ function ask() {
                 echo -E "$response"
             fi
             if ! $raw; then
-                echo -n ""
+                echo -n "\033[0;36m$assistant: \033[0m"
                 if echo -E $response | jq -e '.error' > /dev/null; then
                     echo "zsh-ask \033[0;31merror:\033[0m"
                     echo -E $response | jq -r '.error'
@@ -269,3 +209,107 @@ function ask() {
         fi
     done
 }
+
+# Command prediction script using ChatGPT
+# This should be saved as a separate file
+
+function predict-command() {
+    local history_size=10  # Number of recent commands to analyze
+    local current_dir=$(pwd)
+
+    # Gather recent command history with exit codes
+    local history_data=$(fc -l -n -$history_size |
+        while IFS= read -r cmd; do
+            # Skip the predict-command itself
+            if [[ "$cmd" != "predict-command" && "$cmd" != "predict" ]]; then
+                echo "Command: $cmd"
+                # You might want to add error messages if available
+            fi
+        done)
+
+    # Construct the prompt and escape it properly for JSON
+    local prompt=$(echo "I am in directory: ${current_dir}
+
+Recent command history:
+${history_data}
+
+Based on this history and context, what would be the most likely next command I want to run? Provide just the command without explanation." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
+
+    # Use the existing ask function with specific parameters
+    llmapi -M "gpt-4" -t 150 "$prompt"
+}
+
+# Add an alias for easier access
+alias predict='predict-command'
+
+# Create a ZLE widget
+function predict-widget() {
+    # Run prediction
+    local result=$(predict-command)
+
+    # Put the result in the command line buffer
+    BUFFER="$result"
+    CURSOR=${#BUFFER}
+
+    # Redisplay the command line with the prediction
+    zle redisplay
+}
+
+# Register the widget
+zle -N predict-widget
+
+# Mac-friendly key bindings
+# Option+p (most Mac terminals)
+bindkey 'π' predict-widget
+# Also add Ctrl+x p as an alternative
+bindkey '^Xp' predict-widget
+
+# Create a function to ask for a specific command
+function ask-command() {
+    local request="$1"
+
+    # Construct the prompt for command generation
+    local prompt=$(echo "I need a command to: $request
+
+Please provide just the command without any explanation. Make it a single line that can be executed in a zsh terminal." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
+
+    # Use the existing ask function with specific parameters
+    llmapi -M "gpt-4" -t 150 "$prompt"
+}
+
+# Create a ZLE widget for ask-command
+function ask-command-widget() {
+    # Get the current buffer content
+    local current_text="$BUFFER"
+
+    # Clear line
+    zle kill-whole-line
+
+    # Only proceed if there's text in the buffer
+    if [[ -n "$current_text" ]]; then
+        # Run ask-command with current text and store result
+        local result=$(ask-command "$current_text")
+
+        # Put the result in the command line buffer
+        BUFFER="$result"
+        CURSOR=${#BUFFER}
+    fi
+
+    # Redisplay the command line with the suggestion
+    zle redisplay
+}
+
+# Register the widget
+zle -N ask-command-widget
+
+# Mac-friendly key bindings
+# Option+a (most Mac terminals)
+bindkey 'å' ask-command-widget
+# Also add Ctrl+x a as an alternative
+bindkey '^Xa' ask-command-widget
