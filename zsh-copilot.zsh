@@ -1,37 +1,41 @@
 
 0=${(%):-%N}
-typeset -g ZSH_LLMCOMPLETION_PREFIX=${0:A:h}
+typeset -g ZSH_COPILOT_PREFIX=${0:A:h}
+# Source .env file if it exists
+if [[ -f "$ZSH_COPILOT_PREFIX/.env" ]]; then
+    source "$ZSH_COPILOT_PREFIX/.env"
+fi
 
-(( ! ${+ZSH_LLMCOMPLETION_REPO} )) &&
-typeset -g ZSH_LLMCOMPLETION_REPO="https://github.com/Gamma-Software/zsh-llmcompletion"
+(( ! ${+ZSH_COPILOT_REPO} )) &&
+typeset -g ZSH_COPILOT_REPO="https://github.com/Gamma-Software/zsh-copilot"
 
 # Get the corresponding endpoint for your desired model.
-(( ! ${+ZSH_LLMCOMPLETION_API_URL} )) &&
-typeset -g ZSH_LLMCOMPLETION_API_URL="https://api.openai.com/v1/chat/completions"
+(( ! ${+ZSH_COPILOT_API_URL} )) &&
+typeset -g ZSH_COPILOT_API_URL="https://api.openai.com/v1/chat/completions"
 
 # Fill up your OpenAI api key here.
-if (( ! ${+ZSH_LLMCOMPLETION_API_KEY} )); then
-    echo "Error: ZSH_LLMCOMPLETION_API_KEY is not set."
+if (( ! ${+ZSH_COPILOT_API_KEY} )); then
+    echo "Error: ZSH_COPILOT_API_KEY is not set."
     echo "Please reinstall the plugin and follow the setup instructions at:"
-    echo "https://github.com/Gamma-Software/zsh-llmcompletion#installation"
+    echo "https://github.com/Gamma-Software/zsh-copilot#installation"
     return 1
 fi
 
 # Default configurations
-(( ! ${+ZSH_LLMCOMPLETION_MODEL} )) &&
-typeset -g ZSH_LLMCOMPLETION_MODEL="gpt-3.5-turbo"
-(( ! ${+ZSH_LLMCOMPLETION_TOKENS} )) &&
-typeset -g ZSH_LLMCOMPLETION_TOKENS=800
-(( ! ${+ZSH_LLMCOMPLETION_INITIALROLE} )) &&
-typeset -g ZSH_LLMCOMPLETION_INITIALROLE="system"
-(( ! ${+ZSH_LLMCOMPLETION_INITIALPROMPT} )) &&
-typeset -g ZSH_LLMCOMPLETION_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
+(( ! ${+ZSH_COPILOT_MODEL} )) &&
+typeset -g ZSH_COPILOT_MODEL="gpt-3.5-turbo"
+(( ! ${+ZSH_COPILOT_TOKENS} )) &&
+typeset -g ZSH_COPILOT_TOKENS=800
+(( ! ${+ZSH_COPILOT_INITIALROLE} )) &&
+typeset -g ZSH_COPILOT_INITIALROLE="system"
+(( ! ${+ZSH_COPILOT_INITIALPROMPT} )) &&
+typeset -g ZSH_COPILOT_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
 
 
-function _zsh_llmcompletion_upgrade() {
-  git -C $ZSH_LLMCOMPLETION_PREFIX remote set-url origin $ZSH_LLMCOMPLETION_REPO
-  if git -C $ZSH_LLMCOMPLETION_PREFIX pull; then
-    source $ZSH_LLMCOMPLETION_PREFIX/zsh-llmcompletion.zsh
+function _zsh_copilot_upgrade() {
+  git -C $ZSH_COPILOT_PREFIX remote set-url origin $ZSH_COPILOT_REPO
+  if git -C $ZSH_COPILOT_PREFIX pull; then
+    source $ZSH_COPILOT_PREFIX/zsh-copilot.zsh
     return 0
   else
     echo "Failed to upgrade."
@@ -39,15 +43,15 @@ function _zsh_llmcompletion_upgrade() {
   fi
 }
 
-function _zsh_llmcompletion_show_version() {
-  cat "$ZSH_LLMCOMPLETION_PREFIX/VERSION"
+function _zsh_copilot_show_version() {
+  cat "$ZSH_COPILOT_PREFIX/VERSION"
 }
 
 function llmapi() {
-    local api_url=$ZSH_LLMCOMPLETION_API_URL
-    local api_key=$ZSH_LLMCOMPLETION_API_KEY
-    local tokens=$ZSH_LLMCOMPLETION_TOKENS
-    local model=$ZSH_LLMCOMPLETION_MODEL
+    local api_url=$ZSH_COPILOT_API_URL
+    local api_key=$ZSH_COPILOT_API_KEY
+    local tokens=$ZSH_COPILOT_TOKENS
+    local model=$ZSH_COPILOT_MODEL
     local history=""
 
     local usefile=false
@@ -61,11 +65,11 @@ function llmapi() {
     while getopts ":hvcdmsiurM:f:t:" opt; do
         case $opt in
             h)
-                _zsh_llmcompletion_show_help
+                _zsh_copilot_show_help
                 return 0
                 ;;
             v)
-                _zsh_llmcompletion_show_version
+                _zsh_copilot_show_version
                 return 0
                 ;;
             u)
@@ -73,7 +77,7 @@ function llmapi() {
                     echo "git is required for upgrade."
                     return 1
                 fi
-                if _zsh_llmcompletion_upgrade; then
+                if _zsh_copilot_upgrade; then
                     return 0
                 else
                     return 1
@@ -213,7 +217,7 @@ function llmapi() {
 # Command prediction script using ChatGPT
 # This should be saved as a separate file
 
-function predict-command() {
+function predict() {
     local history_size=10  # Number of recent commands to analyze
     local current_dir=$(pwd)
 
@@ -221,7 +225,7 @@ function predict-command() {
     local history_data=$(fc -l -n -$history_size |
         while IFS= read -r cmd; do
             # Skip the predict-command itself
-            if [[ "$cmd" != "predict-command" && "$cmd" != "predict" ]]; then
+            if [[ "$cmd" != "predict" ]]; then
                 echo "Command: $cmd"
                 # You might want to add error messages if available
             fi
@@ -242,9 +246,6 @@ Based on this history and context, what would be the most likely next command I 
     llmapi -M "gpt-4" -t 150 "$prompt"
 }
 
-# Add an alias for easier access
-alias predict='predict-command'
-
 # Create a ZLE widget
 function predict-widget() {
     # Run prediction
@@ -257,15 +258,6 @@ function predict-widget() {
     # Redisplay the command line with the prediction
     zle redisplay
 }
-
-# Register the widget
-zle -N predict-widget
-
-# Mac-friendly key bindings
-# Option+p (most Mac terminals)
-bindkey 'π' predict-widget
-# Also add Ctrl+x p as an alternative
-bindkey '^Xp' predict-widget
 
 # Create a function to ask for a specific command
 function ask-command() {
@@ -306,10 +298,9 @@ function ask-command-widget() {
 }
 
 # Register the widget
+zle -N predict-widget
 zle -N ask-command-widget
 
-# Mac-friendly key bindings
-# Option+a (most Mac terminals)
-bindkey 'å' ask-command-widget
-# Also add Ctrl+x a as an alternative
-bindkey '^Xa' ask-command-widget
+# Bind the shortcut
+bindkey $ZSH_COPILOT_SHORTCUT_PREDICT predict-widget
+bindkey $ZSH_COPILOT_SHORTCUT_ASK ask-command-widget
