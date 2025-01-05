@@ -1,10 +1,12 @@
 # https://github.com/Gamma-Software/zsh-copilot
 # Copyright (c) 2024-2025 Gamma Software
 
-0=${(%):-%N}
+# Get the path to the current script file
+SCRIPT_PATH=${(%):-%x}
 
 function _setup-zsh-copilot() {
-    typeset -g ZSH_COPILOT_PREFIX=${0:A:h}
+    # Set the plugin directory as the prefix
+    typeset -g ZSH_COPILOT_PREFIX=${SCRIPT_PATH:A:h}
     # Source .env file if it exists
     if [[ -f "$ZSH_COPILOT_PREFIX/.env" ]]; then
         source "$ZSH_COPILOT_PREFIX/.env"
