@@ -188,13 +188,23 @@ function _zsh_copilot_uninstall() {
         return 1
     fi
 
+    # Plugin name
+    PLUGIN_NAME="zsh-copilot"
+
+    # Determine ZSH_CUSTOM path if not set
+    if [ -z "$ZSH_CUSTOM" ]; then
+        ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+    fi
+
+    PLUGIN_DIR="$ZSH_CUSTOM/plugins/$PLUGIN_NAME"
+
     # Remove plugin from .zshrc
-    if grep -q "plugins=.*zsh-copilot" "$HOME/.zshrc"; then
+    if grep -q "plugins=.*$PLUGIN_NAME" "$HOME/.zshrc"; then
         echo "\033[0;34mRemoving plugin from .zshrc...\033[0m"
         # Create backup of .zshrc
         cp "$HOME/.zshrc" "$HOME/.zshrc.backup"
         # Remove plugin from plugins list
-        sed -i.bak "s/zsh-copilot//" "$HOME/.zshrc"
+        sed -i.bak "s/$PLUGIN_NAME//" "$HOME/.zshrc"
         # Clean up empty spaces in plugins list
         sed -i.bak 's/plugins=(  *)/plugins=()/' "$HOME/.zshrc"
         sed -i.bak 's/  */ /g' "$HOME/.zshrc"
@@ -203,9 +213,9 @@ function _zsh_copilot_uninstall() {
     fi
 
     # Remove plugin directory
-    if [ -d "$ZSH_COPILOT_PREFIX" ]; then
+    if [ -d "$PLUGIN_DIR" ]; then
         echo "\033[0;34mRemoving plugin directory...\033[0m"
-        rm -rf "$ZSH_COPILOT_PREFIX"
+        rm -rf "$PLUGIN_DIR"
         if [ $? -eq 0 ]; then
             echo "\033[0;32mPlugin directory removed successfully\033[0m"
         else
