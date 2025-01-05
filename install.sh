@@ -58,28 +58,22 @@ echo -e "${GREEN}Installation/Update complete!${NC}"
 # Check if API key already exists in .env file
 if [ -f "$PLUGIN_DIR/.env" ] && grep -q "^ZSH_COPILOT_API_KEY=.*[^[:space:]]" "$PLUGIN_DIR/.env"; then
     echo -e "${BLUE}API key already set. Do you want to update it? (y/N):${NC}"
-    read -r UPDATE_KEY
-    if [ "$UPDATE_KEY" != "y" ]; then
-        API_KEY=""
-    else
-        echo -e "${BLUE}Please enter your new OpenAI API key:${NC}"
-        read -r API_KEY
-    fi
 else
     echo -e "${BLUE}Please enter your OpenAI API key:${NC}"
     read -r API_KEY
-fi
-if [ -n "$API_KEY" ]; then
-    # Create .env file from template if it doesn't exist
-    if [ ! -f "$PLUGIN_DIR/.env" ]; then
-        cp "$PLUGIN_DIR/.env.template" "$PLUGIN_DIR/.env"
+    if [ -n "$API_KEY" ]; then
+        # Create .env file from template if it doesn't exist
+        if [ ! -f "$PLUGIN_DIR/.env" ]; then
+            cp "$PLUGIN_DIR/.env.template" "$PLUGIN_DIR/.env"
+        fi
+        # Update the API key in the .env file
+        sed -i.bak "s|ZSH_COPILOT_API_KEY=.*|ZSH_COPILOT_API_KEY=$API_KEY|" "$PLUGIN_DIR/.env"
+        echo -e "${GREEN}API key has been set successfully!${NC}"
+    else
+        echo -e "${RED}No API key provided. Please manually add your OpenAI API key to $PLUGIN_DIR/.env${NC}"
     fi
-    # Update the API key in the .env file
-    sed -i.bak "s|ZSH_COPILOT_API_KEY=.*|ZSH_COPILOT_API_KEY=$API_KEY|" "$PLUGIN_DIR/.env"
-    echo -e "${GREEN}API key has been set successfully!${NC}"
-else
-    echo -e "${RED}No API key provided. Please manually add your OpenAI API key to $PLUGIN_DIR/.env${NC}"
 fi
+
 echo -e "${BLUE}Then restart your terminal or run: source ~/.zshrc${NC}"
 
 # Set appropriate permissions
