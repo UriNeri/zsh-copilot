@@ -57,7 +57,7 @@ fi
 echo -e "${GREEN}Installation/Update complete!${NC}"
 # Check if API key already exists in .env file
 if [ -f "$PLUGIN_DIR/.env" ] && grep -q "^ZSH_COPILOT_API_KEY=.*[^[:space:]]" "$PLUGIN_DIR/.env"; then
-    echo -e "${BLUE}API key already set. Do you want to update it? (y/N):${NC}"
+    echo -e "${BLUE}API key already set.${NC}"
 else
     echo -e "${BLUE}Please enter your OpenAI API key:${NC}"
     read -r API_KEY
