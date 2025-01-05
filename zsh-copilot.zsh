@@ -486,7 +486,7 @@ Please provide just the command without any explanation. Make it a single line t
     prompt=${prompt:1:-1}
 
     # Use the existing ask function with specific parameters
-    zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
+    zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
 # Create a ZLE widget for ask-command
@@ -511,14 +511,6 @@ function ask-command-widget() {
     zle redisplay
 }
 
-# Register the widget
-zle -N predict-widget
-zle -N ask-command-widget
-
-# Bind the shortcut
-bindkey $ZSH_COPILOT_SHORTCUT_PREDICT predict-widget
-bindkey $ZSH_COPILOT_SHORTCUT_ASK ask-command-widget
-
 function fix-error() {
     # Get the last command and its error message
     local last_command=$(fc -ln -1)
@@ -536,7 +528,7 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
     prompt=${prompt:1:-1}
 
     # Use the existing copilot function with specific parameters
-    zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
+    zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
 # Create a ZLE widget for fix-error
@@ -554,8 +546,12 @@ function fix-error-widget() {
 
 # Register the widget
 zle -N fix-error-widget
+zle -N predict-widget
+zle -N ask-command-widget
 
-# Mac-friendly key binding (Option+f)
-bindkey 'ƒ' fix-error-widget
-# Alternative binding (Ctrl+x f)
-bindkey '^Xf' fix-error-widget
+# Bind the shortcut
+bindkey $ZSH_COPILOT_SHORTCUT_PREDICT predict-widget
+bindkey $ZSH_COPILOT_SHORTCUT_ASK ask-command-widget
+bindkey $ZSH_COPILOT_SHORTCUT_FIX fix-error-widget
+
+alias zc="zsh-copilot"

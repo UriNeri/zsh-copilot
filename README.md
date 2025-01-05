@@ -6,12 +6,20 @@ A lightweight Zsh plugin serves as a ChatGPT API frontend, enabling you to inter
 
 Acquire your private api-key from [OpenAI](https://platform.openai.com/account/api-keys).
 
-## Oh My Zsh
+### Via installer
+
+It's simple and easy to use. Just run the following command in your terminal:
+
+```sh
+zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Gamma-Software/zsh-copilot/refs/heads/master/install.sh)"
+```
+
+### Manual (Git Clone)
 
 1. Clone this repository into `$ZSH_CUSTOM/plugins` (by default `~/.oh-my-zsh/custom/plugins`)
 
 ```sh
-git clone https://github.com/Licheam/zsh-ask ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-ask
+git clone https://github.com/Gamma-Software/zsh-copilot ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-copilot
 ```
 
 2. Add the plugin to the list of plugins for Oh My Zsh to load (inside `~/.zshrc`):
@@ -23,29 +31,22 @@ plugins=(
 )
 ```
 
-3. Add the following to your `.zshrc`:
+3. Add the following to your `$ZSH_CUSTOM/plugins/zsh-copilot/.env` file:
 ```sh
-export ZSH_ASK_API_KEY="<Your API key here>"
+ZSH_COPILOT_API_KEY="<Your API key here>"
 ```
 
-## Manual (Git Clone)
-
-1. Clone this repository somewhere on your machine. This guide will assume `$HOME/.zsh/zsh-ask`.
-   ```sh
-   git clone https://github.com/Licheam/zsh-ask $HOME/.zsh/zsh-ask
-   ```
-2. Add the following to your `.zshrc`:
-   ```sh
-   export ZSH_ASK_API_KEY="<Your API key here>"
-   source $HOME/.zsh/zsh-ask/zsh-ask.zsh
-   ```
-3. Start a new terminal session.
+4. Restart your terminal or run:
+```sh
+source ~/.zshrc
+```
 
 ## Uninstallation
 
-1. Remove the code referencing this plugin from `~/.zshrc`.
-2. Remove the git repository from your hard drive.
-
+Run the command:
+```sh
+zsh-copilot uninstall
+```
 
 ## Preliminaries
 
@@ -62,37 +63,37 @@ If you would like to have markdown rendering with option `-m`, [`glow`](https://
 Fill your OpenAI api key as `ZSH_ASK_API_KEY` (see [INSTALL.md](INSTALL.md) for detail information), then just run
 
 ```
-ask who are you
+zsh-copilot who are you
 ```
 
 Use `-c` for dialogue format communication.
 
 ```
-ask -c chat with me
+zsh-copilot -c chat with me
 ```
 
 Use `-m` for markdown rendering (`glow` required)
 
 ```
-ask -m how to code quick sort in python
+zsh-copilot -m how to code quick sort in python
 ```
 
 Use `-s` for streaming display (doesn't work with `-m` yet)
 
 ```
-ask -s write a poem for me
+zsh-copilot -s write a poem for me
 ```
 
-Use `-i` to inherits history from last chat (which is recorded in ZSH_ASK_HISTORY).
+Use `-i` to inherits history from last chat (which is recorded in ZSH_COPILOT_HISTORY).
 
 ```
-ask -i tell me more about it
+zsh-copilot -i tell me more about it
 ```
 
 Use `-h` for more information.
 
 ```
-ask -h
+zsh-copilot -h
 ```
 
 ### Command Prediction and Generation
