@@ -25,7 +25,7 @@ mkdir -p "$ZSH_CUSTOM/plugins"
 # Check if plugin directory exists
 if [ -d "$PLUGIN_DIR" ]; then
     echo -e "${BLUE}Updating existing installation...${NC}"
-    if git -C "$PLUGIN_DIR" pull origin main; then
+    if git -C "$PLUGIN_DIR" pull origin master; then
         echo -e "${GREEN}Update successful!${NC}"
     else
         echo -e "${RED}Update failed. Please check your internet connection or repository access.${NC}"
