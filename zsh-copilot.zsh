@@ -373,3 +373,44 @@ zle -N ask-command-widget
 # Bind the shortcut
 bindkey $ZSH_COPILOT_SHORTCUT_PREDICT predict-widget
 bindkey $ZSH_COPILOT_SHORTCUT_ASK ask-command-widget
+
+function fix-error() {
+    # Get the last command and its error message
+    local last_command=$(fc -ln -1)
+    local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
+
+    # Construct the prompt for error fixing
+    local prompt=$(echo "I got this error when running: $last_command
+
+Error message:
+$error_output
+
+Please provide just the corrected command without any explanation." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
+
+    # Use the existing copilot function with specific parameters
+    zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
+}
+
+# Create a ZLE widget for fix-error
+function fix-error-widget() {
+    # Run fix-error and store result
+    local result=$(fix-error)
+
+    # Put the result in the command line buffer
+    BUFFER="$result"
+    CURSOR=${#BUFFER}
+
+    # Redisplay the command line with the suggestion
+    zle redisplay
+}
+
+# Register the widget
+zle -N fix-error-widget
+
+# Mac-friendly key binding (Option+f)
+bindkey 'ƒ' fix-error-widget
+# Alternative binding (Ctrl+x f)
+bindkey '^Xf' fix-error-widget
