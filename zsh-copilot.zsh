@@ -62,6 +62,9 @@ function _zsh_copilot_show_help() {
   echo "  -r                Print raw output."
   echo "  -o                Print only the output."
   echo "  -d                Print debug information."
+  echo "Commands:"
+  echo "  configure         Configure plugin settings interactively."
+  echo "  uninstall        Remove the plugin completely."
 }
 
 function _zsh_copilot_upgrade() {
@@ -77,6 +80,148 @@ function _zsh_copilot_upgrade() {
 
 function _zsh_copilot_show_version() {
   cat "$ZSH_COPILOT_PREFIX/VERSION"
+}
+
+function _zsh_copilot_configure() {
+    local env_file="$ZSH_COPILOT_PREFIX/.env"
+
+    # Show current configuration
+    function show_current_config() {
+        echo "\033[0;34mCurrent Configuration:\033[0m"
+        echo "\033[1;33m1.\033[0m Model: ${ZSH_COPILOT_MODEL}"
+        echo "\033[1;33m2.\033[0m Max Tokens: ${ZSH_COPILOT_TOKENS}"
+        echo "\033[1;33m3.\033[0m API Key: ${ZSH_COPILOT_API_KEY}"
+        echo "\033[1;33m4.\033[0m Predict Shortcut: ${ZSH_COPILOT_SHORTCUT_PREDICT}"
+        echo "\033[1;33m5.\033[0m Ask Shortcut: ${ZSH_COPILOT_SHORTCUT_ASK}"
+        echo "\033[1;33m6.\033[0m Fix Shortcut: ${ZSH_COPILOT_SHORTCUT_FIX}"
+        echo "\033[1;33m7.\033[0m Exit"
+    }
+
+    # Update configuration
+    function update_config() {
+        local param=$1
+        local value=$2
+        local param_name=$3
+
+        # Create backup
+        cp "$env_file" "$env_file.backup"
+
+        # Update parameter
+        sed -i.bak "s|$param=.*|$param=$value|" "$env_file"
+
+        if [ $? -eq 0 ]; then
+            echo "\033[0;32m$param_name updated successfully!\033[0m"
+            source "$env_file"
+        else
+            echo "\033[0;31mFailed to update $param_name. Restoring backup...\033[0m"
+            mv "$env_file.backup" "$env_file"
+        fi
+
+        # Clean up
+        rm -f "$env_file.bak"
+    }
+
+    while true; do
+        show_current_config
+        echo "\n\033[0;34mWhat would you like to modify? (1-7):\033[0m"
+        read choice
+
+        case $choice in
+            1)
+                echo "\033[0;34mEnter new model (e.g., gpt-3.5-turbo, gpt-4):\033[0m"
+                read new_model
+                update_config "ZSH_COPILOT_MODEL" "$new_model" "Model"
+                ;;
+            2)
+                echo "\033[0;34mEnter new max tokens (50-2000):\033[0m"
+                read new_tokens
+                if [[ "$new_tokens" =~ ^[0-9]+$ ]] && [ "$new_tokens" -ge 50 ] && [ "$new_tokens" -le 2000 ]; then
+                    update_config "ZSH_COPILOT_TOKENS" "$new_tokens" "Max tokens"
+                else
+                    echo "\033[0;31mInvalid token value. Please enter a number between 50 and 2000.\033[0m"
+                fi
+                ;;
+            3)
+                echo "\033[0;34mEnter new OpenAI API key:\033[0m"
+                read new_key
+                if [ -n "$new_key" ]; then
+                    update_config "ZSH_COPILOT_API_KEY" "$new_key" "API key"
+                else
+                    echo "\033[0;31mAPI key cannot be empty.\033[0m"
+                fi
+                ;;
+            4)
+                echo "\033[0;34mEnter new predict shortcut (e.g., π):\033[0m"
+                read new_predict
+                update_config "ZSH_COPILOT_SHORTCUT_PREDICT" "$new_predict" "Predict shortcut"
+                ;;
+            5)
+                echo "\033[0;34mEnter new ask shortcut (e.g., æ):\033[0m"
+                read new_ask
+                update_config "ZSH_COPILOT_SHORTCUT_ASK" "$new_ask" "Ask shortcut"
+                ;;
+            6)
+                echo "\033[0;34mEnter new fix shortcut (e.g., ƒ):\033[0m"
+                read new_fix
+                update_config "ZSH_COPILOT_SHORTCUT_FIX" "$new_fix" "Fix shortcut"
+                ;;
+            7)
+                echo "\033[0;32mConfiguration complete!\033[0m"
+                return 0
+                ;;
+            *)
+                echo "\033[0;31mInvalid choice. Please select 1-7.\033[0m"
+                ;;
+        esac
+        echo
+    done
+}
+
+function _zsh_copilot_uninstall() {
+    echo "\033[0;34mUninstalling zsh-copilot...\033[0m"
+
+    # Ask for confirmation
+    echo "\033[0;31mThis will remove zsh-copilot completely. Are you sure? (y/N)\033[0m"
+    read confirm
+    if [[ "$confirm" != "y" ]]; then
+        echo "\033[0;32mUninstall cancelled.\033[0m"
+        return 1
+    fi
+
+    # Remove plugin from .zshrc
+    if grep -q "plugins=.*zsh-copilot" "$HOME/.zshrc"; then
+        echo "\033[0;34mRemoving plugin from .zshrc...\033[0m"
+        # Create backup of .zshrc
+        cp "$HOME/.zshrc" "$HOME/.zshrc.backup"
+        # Remove plugin from plugins list
+        sed -i.bak "s/zsh-copilot//" "$HOME/.zshrc"
+        # Clean up empty spaces in plugins list
+        sed -i.bak 's/plugins=(  *)/plugins=()/' "$HOME/.zshrc"
+        sed -i.bak 's/  */ /g' "$HOME/.zshrc"
+        echo "\033[0;32mPlugin removed from .zshrc\033[0m"
+        echo "\033[0;34mBackup created at ~/.zshrc.backup\033[0m"
+    fi
+
+    # Remove plugin directory
+    if [ -d "$ZSH_COPILOT_PREFIX" ]; then
+        echo "\033[0;34mRemoving plugin directory...\033[0m"
+        rm -rf "$ZSH_COPILOT_PREFIX"
+        if [ $? -eq 0 ]; then
+            echo "\033[0;32mPlugin directory removed successfully\033[0m"
+        else
+            echo "\033[0;31mFailed to remove plugin directory\033[0m"
+            return 1
+        fi
+    fi
+
+    # Clean up any temporary files
+    rm -f "$HOME/.zshrc.bak"
+
+    echo "\033[0;32mUninstallation complete!\033[0m"
+    echo "\033[0;34mPlease restart your terminal or run: source ~/.zshrc\033[0m"
+
+    # Exit the shell since we just removed the current script
+    exit 0
 }
 
 function zsh-copilot() {
@@ -203,6 +348,17 @@ function zsh-copilot() {
         read -r input
     fi
 
+    # Add configure command handling
+    if [[ "$input" == "configure" ]]; then
+        _zsh_copilot_configure
+        return $?
+    fi
+
+    # Add uninstall command handling
+    if [[ "$input" == "uninstall" ]]; then
+        _zsh_copilot_uninstall
+        return $?
+    fi
 
     while true; do
         history=$history' {"role":"user", "content":"'"$input"'"}'

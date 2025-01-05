@@ -55,8 +55,20 @@ if ! grep -q "plugins=.*$PLUGIN_NAME" "$HOME/.zshrc"; then
 fi
 
 echo -e "${GREEN}Installation/Update complete!${NC}"
-echo -e "${BLUE}Please enter your OpenAI API key:${NC}"
-read -r API_KEY
+# Check if API key already exists in .env file
+if [ -f "$PLUGIN_DIR/.env" ] && grep -q "^ZSH_COPILOT_API_KEY=.*[^[:space:]]" "$PLUGIN_DIR/.env"; then
+    echo -e "${BLUE}API key already set. Do you want to update it? (y/N):${NC}"
+    read -r UPDATE_KEY
+    if [ "$UPDATE_KEY" != "y" ]; then
+        API_KEY=""
+    else
+        echo -e "${BLUE}Please enter your new OpenAI API key:${NC}"
+        read -r API_KEY
+    fi
+else
+    echo -e "${BLUE}Please enter your OpenAI API key:${NC}"
+    read -r API_KEY
+fi
 if [ -n "$API_KEY" ]; then
     # Create .env file from template if it doesn't exist
     if [ ! -f "$PLUGIN_DIR/.env" ]; then
