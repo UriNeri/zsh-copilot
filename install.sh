@@ -54,25 +54,19 @@ if ! grep -q "plugins=.*$PLUGIN_NAME" "$HOME/.zshrc"; then
     fi
 fi
 
-# Create or update the plugin files
-cat > "$PLUGIN_DIR/$PLUGIN_NAME.plugin.zsh" << 'EOL'
-source ${0:A:h}/$PLUGIN_NAME.zsh
-EOL
-
-cat > "$PLUGIN_DIR/$PLUGIN_NAME.zsh" << 'EOL'
-# Copy your $PLUGIN_NAME.zsh content here
-source ${0:A:h}/$PLUGIN_NAME.zsh
-EOL
-
 echo -e "${GREEN}Installation/Update complete!${NC}"
 echo -e "${BLUE}Please enter your OpenAI API key:${NC}"
 read -r API_KEY
 if [ -n "$API_KEY" ]; then
-    # Update the API key in the plugin file
-    sed -i.bak "s|ZSH_ASK_API_KEY=.*|ZSH_ASK_API_KEY=\"$API_KEY\"|" "$PLUGIN_DIR/$PLUGIN_NAME.zsh"
+    # Create .env file from template if it doesn't exist
+    if [ ! -f "$PLUGIN_DIR/.env" ]; then
+        cp "$PLUGIN_DIR/.env.template" "$PLUGIN_DIR/.env"
+    fi
+    # Update the API key in the .env file
+    sed -i.bak "s|ZSH_COPILOT_API_KEY=.*|ZSH_COPILOT_API_KEY=$API_KEY|" "$PLUGIN_DIR/.env"
     echo -e "${GREEN}API key has been set successfully!${NC}"
 else
-    echo -e "${RED}No API key provided. Please manually add your OpenAI API key to $ZSH_CUSTOM/plugins/$PLUGIN_NAME/$PLUGIN_NAME.zsh${NC}"
+    echo -e "${RED}No API key provided. Please manually add your OpenAI API key to $PLUGIN_DIR/.env${NC}"
 fi
 echo -e "${BLUE}Then restart your terminal or run: source ~/.zshrc${NC}"
 
