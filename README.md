@@ -4,7 +4,48 @@ A lightweight Zsh plugin serves as a ChatGPT API frontend, enabling you to inter
 
 ## Installation
 
-See [INSTALL.md](INSTALL.md) or run `source zsh-ask.zsh` for a quick start.
+Acquire your private api-key from [OpenAI](https://platform.openai.com/account/api-keys).
+
+## Oh My Zsh
+
+1. Clone this repository into `$ZSH_CUSTOM/plugins` (by default `~/.oh-my-zsh/custom/plugins`)
+
+```sh
+git clone https://github.com/Licheam/zsh-ask ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-ask
+```
+
+2. Add the plugin to the list of plugins for Oh My Zsh to load (inside `~/.zshrc`):
+
+```sh
+plugins=(
+   # other plugins...
+   zsh-copilot
+)
+```
+
+3. Add the following to your `.zshrc`:
+```sh
+export ZSH_ASK_API_KEY="<Your API key here>"
+```
+
+## Manual (Git Clone)
+
+1. Clone this repository somewhere on your machine. This guide will assume `$HOME/.zsh/zsh-ask`.
+   ```sh
+   git clone https://github.com/Licheam/zsh-ask $HOME/.zsh/zsh-ask
+   ```
+2. Add the following to your `.zshrc`:
+   ```sh
+   export ZSH_ASK_API_KEY="<Your API key here>"
+   source $HOME/.zsh/zsh-ask/zsh-ask.zsh
+   ```
+3. Start a new terminal session.
+
+## Uninstallation
+
+1. Remove the code referencing this plugin from `~/.zshrc`.
+2. Remove the git repository from your hard drive.
+
 
 ## Preliminaries
 
@@ -68,6 +109,12 @@ This plugin provides two powerful command-line features:
    - Press Option+a (Mac) or Ctrl+x a to generate the command
    - Example: Type "find all PDF files modified today" and press Option+a
    - The generated command appears in your command line ready to execute
+
+3. **Error Fixing** (Option+f or Ctrl+x f)
+   - Automatically captures the last failed command and its error
+   - Generates a corrected version of the command
+   - Press Option+f (Mac) or Ctrl+x f to see the fixed command
+   - The corrected command appears in your command line ready to execute
 
 Both features:
 - Place commands directly in your command line
