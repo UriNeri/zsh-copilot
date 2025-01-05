@@ -1,36 +1,68 @@
+# https://github.com/Gamma-Software/zsh-copilot
+# Copyright (c) 2024-2025 Gamma Software
 
 0=${(%):-%N}
-typeset -g ZSH_COPILOT_PREFIX=${0:A:h}
-# Source .env file if it exists
-if [[ -f "$ZSH_COPILOT_PREFIX/.env" ]]; then
-    source "$ZSH_COPILOT_PREFIX/.env"
-fi
 
-(( ! ${+ZSH_COPILOT_REPO} )) &&
-typeset -g ZSH_COPILOT_REPO="https://github.com/Gamma-Software/zsh-copilot"
+function _setup-zsh-copilot() {
+    typeset -g ZSH_COPILOT_PREFIX=${0:A:h}
+    # Source .env file if it exists
+    if [[ -f "$ZSH_COPILOT_PREFIX/.env" ]]; then
+        source "$ZSH_COPILOT_PREFIX/.env"
+    fi
 
-# Get the corresponding endpoint for your desired model.
-(( ! ${+ZSH_COPILOT_API_URL} )) &&
-typeset -g ZSH_COPILOT_API_URL="https://api.openai.com/v1/chat/completions"
+    (( ! ${+ZSH_COPILOT_REPO} )) &&
+    typeset -g ZSH_COPILOT_REPO="https://github.com/Gamma-Software/zsh-copilot"
 
-# Fill up your OpenAI api key here.
-if (( ! ${+ZSH_COPILOT_API_KEY} )); then
-    echo "Error: ZSH_COPILOT_API_KEY is not set."
-    echo "Please reinstall the plugin and follow the setup instructions at:"
-    echo "https://github.com/Gamma-Software/zsh-copilot#installation"
-    return 1
-fi
+    # Get the corresponding endpoint for your desired model.
+    (( ! ${+ZSH_COPILOT_API_URL} )) &&
+    typeset -g ZSH_COPILOT_API_URL="https://api.openai.com/v1/chat/completions"
 
-# Default configurations
-(( ! ${+ZSH_COPILOT_MODEL} )) &&
-typeset -g ZSH_COPILOT_MODEL="gpt-3.5-turbo"
-(( ! ${+ZSH_COPILOT_TOKENS} )) &&
-typeset -g ZSH_COPILOT_TOKENS=800
-(( ! ${+ZSH_COPILOT_INITIALROLE} )) &&
-typeset -g ZSH_COPILOT_INITIALROLE="system"
-(( ! ${+ZSH_COPILOT_INITIALPROMPT} )) &&
-typeset -g ZSH_COPILOT_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
+    # Fill up your OpenAI api key here.
+    if (( ! ${+ZSH_COPILOT_API_KEY} )); then
+        echo "Error: ZSH_COPILOT_API_KEY is not set."
+        echo "Please reinstall the plugin and follow the setup instructions at:"
+        echo "https://github.com/Gamma-Software/zsh-copilot#installation"
+        return 1
+    fi
 
+    # Default configurations
+    (( ! ${+ZSH_COPILOT_MODEL} )) &&
+    typeset -g ZSH_COPILOT_MODEL="gpt-3.5-turbo"
+    (( ! ${+ZSH_COPILOT_TOKENS} )) &&
+    typeset -g ZSH_COPILOT_TOKENS=800
+
+    (( ! ${+ZSH_COPILOT_CONVERSATION} )) &&
+    typeset -g ZSH_COPILOT_CONVERSATION=false
+    (( ! ${+ZSH_COPILOT_INHERITS} )) &&
+    typeset -g ZSH_COPILOT_INHERITS=false
+    (( ! ${+ZSH_COPILOT_MARKDOWN} )) &&
+    typeset -g ZSH_COPILOT_MARKDOWN=false
+    (( ! ${+ZSH_COPILOT_STREAM} )) &&
+    typeset -g ZSH_COPILOT_STREAM=false
+    (( ! ${+ZSH_COPILOT_HISTORY} )) &&
+    typeset -g ZSH_COPILOT_HISTORY=""
+    (( ! ${+ZSH_COPILOT_INITIALROLE} )) &&
+    typeset -g ZSH_COPILOT_INITIALROLE="system"
+    (( ! ${+ZSH_COPILOT_INITIALPROMPT} )) &&
+    typeset -g ZSH_COPILOT_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
+}
+_setup-zsh-copilot
+
+function _zsh_copilot_show_help() {
+  echo "Fix, predict, and ask commands using your command line Copilot powered by LLMs."
+  echo "Usage: zsh-copilot [options...]"
+  echo "       zsh-copilot [options...] '<your-question>'"
+  echo "Options:"
+  echo "  -h                Display this help message."
+  echo "  -v                Display the version number."
+  echo "  -M <openai_model> Set OpenAI model to <openai_model>, default sets to gpt-3.5-turbo."
+  echo "                    Models can be found at https://platform.openai.com/docs/models."
+  echo "  -t <max_tokens>   Set max tokens to <max_tokens>, default sets to 800."
+  echo "  -u                Upgrade this plugin."
+  echo "  -r                Print raw output."
+  echo "  -o                Print only the output."
+  echo "  -d                Print debug information."
+}
 
 function _zsh_copilot_upgrade() {
   git -C $ZSH_COPILOT_PREFIX remote set-url origin $ZSH_COPILOT_REPO
@@ -47,10 +79,14 @@ function _zsh_copilot_show_version() {
   cat "$ZSH_COPILOT_PREFIX/VERSION"
 }
 
-function llmapi() {
+function zsh-copilot() {
     local api_url=$ZSH_COPILOT_API_URL
     local api_key=$ZSH_COPILOT_API_KEY
+    local conversation=$ZSH_COPILOT_CONVERSATION
+    local markdown=$ZSH_COPILOT_MARKDOWN
+    local stream=$ZSH_COPILOT_STREAM
     local tokens=$ZSH_COPILOT_TOKENS
+    local inherits=$ZSH_COPILOT_INHERITS
     local model=$ZSH_COPILOT_MODEL
     local history=""
 
@@ -59,10 +95,11 @@ function llmapi() {
     local requirements=("curl" "jq")
     local debug=false
     local raw=false
+    local output=false
     local satisfied=true
     local input=""
     local assistant="assistant"
-    while getopts ":hvcdmsiurM:f:t:" opt; do
+    while getopts ":hvcdmsiuroM:f:t:" opt; do
         case $opt in
             h)
                 _zsh_copilot_show_help
@@ -83,8 +120,14 @@ function llmapi() {
                     return 1
                 fi
                 ;;
+            c)
+                conversation=true
+                ;;
             d)
                 debug=true
+                ;;
+            i)
+                inherits=true
                 ;;
             t)
                 if ! [[ $OPTARG =~ ^[0-9]+$ ]]; then
@@ -110,6 +153,19 @@ function llmapi() {
             M)
                 model=$OPTARG
                 ;;
+            m)
+                markdown=true
+                if ! which "glow" > /dev/null; then
+                    echo "glow is required for markdown rendering."
+                    satisfied=false
+                fi
+                ;;
+            s)
+                stream=true
+                ;;
+            o)
+                output=true
+                ;;
             r)
                 raw=true
                 ;;
@@ -123,10 +179,18 @@ function llmapi() {
     for i in "${requirements[@]}"
     do
     if ! which $i > /dev/null; then
-        echo "zsh-ask \033[0;31merror:\033[0m $i is required."
+        echo "zsh-copilot \033[0;31merror:\033[0m $i is required."
         return 1
     fi
     done
+
+    if $inherits; then
+        history=$ZSH_COPILOT_HISTORY
+    fi
+
+    if [ "$history" = "" ]; then
+        history='{"role":"'$ZSH_COPILOT_INITIALROLE'", "content":"'$ZSH_COPILOT_INITIALPROMPT'"}, '
+    fi
 
     shift $((OPTIND-1))
 
@@ -163,7 +227,9 @@ function llmapi() {
                     token=${token:6}
                     if ! $raw && delta_text=$(echo -E $token | jq -re '.choices[].delta.role'); then
                         assistant=$(echo -E $token | jq -je '.choices[].delta.role')
-                        echo -n "\033[0;36m$assistant: \033[0m"
+                        if ! $output; then
+                            echo -n "\033[0;36m$assistant: \033[0m"
+                        fi
                     fi
                     local delta_text=""
                     if delta_text=$(echo -E $token | jq -re '.choices[].delta.content'); then
@@ -184,9 +250,11 @@ function llmapi() {
                 echo -E "$response"
             fi
             if ! $raw; then
-                echo -n "\033[0;36m$assistant: \033[0m"
+                if ! $output; then
+                    echo -n "\033[0;36m$assistant: \033[0m"
+                fi
                 if echo -E $response | jq -e '.error' > /dev/null; then
-                    echo "zsh-ask \033[0;31merror:\033[0m"
+                    echo "zsh-copilot \033[0;31merror:\033[0m"
                     echo -E $response | jq -r '.error'
                     return 1
                 fi
@@ -203,7 +271,7 @@ function llmapi() {
             fi
         fi
         history=$history', '$message', '
-        ZSH_ASK_HISTORY=$history
+        ZSH_COPILOT_HISTORY=$history
         if ! $conversation; then
             break
         fi
@@ -213,6 +281,7 @@ function llmapi() {
         fi
     done
 }
+
 
 # Command prediction script using ChatGPT
 # This should be saved as a separate file
@@ -243,13 +312,13 @@ Based on this history and context, what would be the most likely next command I 
     prompt=${prompt:1:-1}
 
     # Use the existing ask function with specific parameters
-    llmapi -M "gpt-4" -t 150 "$prompt"
+    zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
 # Create a ZLE widget
 function predict-widget() {
     # Run prediction
-    local result=$(predict-command)
+    local result=$(predict)
 
     # Put the result in the command line buffer
     BUFFER="$result"
@@ -272,7 +341,7 @@ Please provide just the command without any explanation. Make it a single line t
     prompt=${prompt:1:-1}
 
     # Use the existing ask function with specific parameters
-    llmapi -M "gpt-4" -t 150 "$prompt"
+    zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
 # Create a ZLE widget for ask-command
