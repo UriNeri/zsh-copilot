@@ -58,24 +58,12 @@ function _zsh_copilot_show_help() {
   echo "  -M <openai_model> Set OpenAI model to <openai_model>, default sets to gpt-3.5-turbo."
   echo "                    Models can be found at https://platform.openai.com/docs/models."
   echo "  -t <max_tokens>   Set max tokens to <max_tokens>, default sets to 800."
-  echo "  -u                Upgrade this plugin."
   echo "  -r                Print raw output."
   echo "  -o                Print only the output."
   echo "  -d                Print debug information."
   echo "Commands:"
   echo "  configure         Configure plugin settings interactively."
   echo "  uninstall        Remove the plugin completely."
-}
-
-function _zsh_copilot_upgrade() {
-  git -C $ZSH_COPILOT_PREFIX remote set-url origin $ZSH_COPILOT_REPO
-  if git -C $ZSH_COPILOT_PREFIX pull; then
-    source $ZSH_COPILOT_PREFIX/zsh-copilot.zsh
-    return 0
-  else
-    echo "Failed to upgrade."
-    return 1
-  fi
 }
 
 function _zsh_copilot_show_version() {
@@ -254,7 +242,7 @@ function zsh-copilot() {
     local satisfied=true
     local input=""
     local assistant="assistant"
-    while getopts ":hvcdmsiuroM:f:t:" opt; do
+    while getopts ":hvcdmsiroM:f:t:" opt; do
         case $opt in
             h)
                 _zsh_copilot_show_help
@@ -263,17 +251,6 @@ function zsh-copilot() {
             v)
                 _zsh_copilot_show_version
                 return 0
-                ;;
-            u)
-                if ! which "git" > /dev/null; then
-                    echo "git is required for upgrade."
-                    return 1
-                fi
-                if _zsh_copilot_upgrade; then
-                    return 0
-                else
-                    return 1
-                fi
                 ;;
             c)
                 conversation=true
