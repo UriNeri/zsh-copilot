@@ -154,13 +154,13 @@ function zsh-copilot() {
 
     # Add fix command handling
     if [[ "$input" == "fix" ]]; then
-        fix-error
+        _zsh_copilot_fix_error
         return $?
     fi
 
     # Add ask command handling
     if [[ "$input" =~ ^ask[[:space:]]+(.*) ]]; then
-        ask-command "${match[1]}"
+        _zsh_copilot_ask_command "${match[1]}"
         return $?
     fi
 

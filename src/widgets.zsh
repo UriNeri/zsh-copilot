@@ -34,7 +34,7 @@ function ask-command-widget() {
 
 function fix-error-widget() {
     # Run fix-error and store result
-    local result=$(fix-error-for-widget)
+    local result=$(_zsh_copilot_fix_error_for_widget)
 
     # Put the result in the command line buffer
     BUFFER="$result"
