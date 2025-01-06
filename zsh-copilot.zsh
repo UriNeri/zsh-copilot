@@ -55,6 +55,7 @@ function _zsh_copilot_show_help() {
   echo "Usage: zsh-copilot [options...]"
   echo "       zsh-copilot [options...] '<your-question>'"
   echo "       zsh-copilot configure"
+  echo "       zsh-copilot update"
   echo "       zsh-copilot uninstall"
   echo "Aliases: zsh-copilot <-> zc"
   echo "Options:"
@@ -68,6 +69,7 @@ function _zsh_copilot_show_help() {
   echo "  -d                Print debug information."
   echo "Commands:"
   echo "  configure         Configure plugin settings interactively."
+  echo "  update           Update the plugin to the latest version."
   echo "  uninstall        Remove the plugin completely."
 }
 
@@ -227,6 +229,43 @@ function _zsh_copilot_uninstall() {
     exit 0
 }
 
+function _zsh_copilot_update() {
+    echo "\033[0;34mUpdating zsh-copilot...\033[0m"
+
+    # Store current directory
+    local current_dir=$(pwd)
+
+    # Change to plugin directory
+    cd "$ZSH_COPILOT_PREFIX"
+
+    # Backup .env file if it exists
+    if [[ -f ".env" ]]; then
+        cp .env .env.backup
+    fi
+
+    # Pull latest changes
+    if git pull origin main; then
+        echo "\033[0;32mSuccessfully updated zsh-copilot!\033[0m"
+
+        # Restore .env file if it existed
+        if [[ -f ".env.backup" ]]; then
+            mv .env.backup .env
+        fi
+
+        echo "\033[0;34mPlease restart your terminal or run: source ~/.zshrc\033[0m"
+    else
+        echo "\033[0;31mUpdate failed. Please try again or report the issue.\033[0m"
+
+        # Restore .env backup if update failed
+        if [[ -f ".env.backup" ]]; then
+            mv .env.backup .env
+        fi
+    fi
+
+    # Return to original directory
+    cd "$current_dir"
+}
+
 function zsh-copilot() {
     local api_url=$ZSH_COPILOT_API_URL
     local api_key=$ZSH_COPILOT_API_KEY
@@ -349,6 +388,12 @@ function zsh-copilot() {
     # Add uninstall command handling
     if [[ "$input" == "uninstall" ]]; then
         _zsh_copilot_uninstall
+        return $?
+    fi
+
+    # Add update command handling
+    if [[ "$input" == "update" ]]; then
+        _zsh_copilot_update
         return $?
     fi
 
