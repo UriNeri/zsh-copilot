@@ -423,7 +423,29 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
     # Remove the outer quotes that jq adds
     prompt=${prompt:1:-1}
 
-    # Use the existing copilot function with specific parameters
+    # Get the command from copilot
+    local result=$(zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt")
+
+    # Add to next command buffer
+    print -z "$result"
+}
+
+
+function fix-error-for-widget() {
+    local request="$1"
+
+    # Construct the prompt for command generation
+    local prompt=$(echo "I got this error when running: $last_command
+
+Error message:
+$error_output
+
+Please provide just the corrected command without any explanation." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
+
+    # Use the existing ask function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
@@ -572,7 +594,7 @@ function zsh-copilot() {
 
     # Add ask command handling
     if [[ "$input" =~ ^ask[[:space:]]+(.*) ]]; then
-        ask-command-widget "${match[1]}"
+        ask-command "${match[1]}"
         return $?
     fi
 
@@ -791,3 +813,17 @@ function _hex_to_char() {
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget
+
+# Define the trap function
+function _zsh_copilot_error_reminder() {
+    local exit_code=$?
+    # Only show message for non-zero exit codes and ignore common status codes
+    if [ $exit_code -ne 0 ] && [ $exit_code -ne 130 ] && [ $exit_code -ne 141 ]; then
+        echo "\033[0;33mTip: Run 'zsh-copilot fix' or 'zcf' to get a suggested fix for this error.\033[0m"
+    fi
+    return $exit_code
+}
+
+# Add to precmd hook to catch errors from the last command
+autoload -U add-zsh-hook
+add-zsh-hook precmd _zsh_copilot_error_reminder
