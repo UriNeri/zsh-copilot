@@ -79,31 +79,32 @@ _setup-zsh-copilot
 _zsh_validate_ping_api
 
 function _zsh_copilot_show_help() {
-  echo "Fix, predict, and ask commands using your command line Copilot powered by LLMs."
-  echo "Usage: zsh-copilot [options...]"
-  echo "       zsh-copilot [options...] '<your-question>'"
-  echo "       zsh-copilot config"
-  echo "       zsh-copilot update"
-  echo "       zsh-copilot uninstall"
-  echo "Aliases: zsh-copilot <-> zc"
-  echo "Options:"
-  echo "  -h                Display this help message."
-  echo "  -v                Display the version number."
-  echo "  -M <openai_model> Set OpenAI model to <openai_model>, default sets to gpt-3.5-turbo."
-  echo "                    Models can be found at https://platform.openai.com/docs/models."
-  echo "  -t <max_tokens>   Set max tokens to <max_tokens>, default sets to 800."
-  echo "  -r                Print raw output."
-  echo "  -o                Print only the output."
-  echo "  -d                Print debug information."
-  echo "Commands:"
-  echo "  config         Configure plugin settings interactively."
-  echo "  update           Update the plugin to the latest version."
-  echo "  uninstall        Remove the plugin completely."
-  echo "  fix             Fix the last failed command."
+    echo "Fix, predict, and ask commands using your command line Copilot powered by LLMs."
+    echo "Usage: zsh-copilot [options...]"
+    echo "       zsh-copilot [options...] '<your-question>'"
+    echo "       zsh-copilot config"
+    echo "       zsh-copilot update"
+    echo "       zsh-copilot uninstall"
+    echo "Aliases: zsh-copilot <-> zc"
+    echo "Options:"
+    echo "  -h                Display this help message."
+    echo "  -v                Display the version number."
+    echo "  -M <openai_model> Set OpenAI model to <openai_model>, default sets to gpt-3.5-turbo."
+    echo "                    Models can be found at https://platform.openai.com/docs/models."
+    echo "  -t <max_tokens>   Set max tokens to <max_tokens>, default sets to 800."
+    echo "  -r                Print raw output."
+    echo "  -o                Print only the output."
+    echo "  -d                Print debug information."
+    echo "Commands:"
+    echo "  config         Configure plugin settings interactively."
+    echo "  update           Update the plugin to the latest version."
+    echo "  uninstall        Remove the plugin completely."
+    echo "  fix             Fix the last failed command."
+    echo "  ask <request>    Get a command suggestion for your request."
 }
 
 function _zsh_copilot_show_version() {
-  cat "$ZSH_COPILOT_PREFIX/VERSION"
+    cat "$ZSH_COPILOT_PREFIX/VERSION"
 }
 
 function _zsh_copilot_configure() {
@@ -411,13 +412,15 @@ function fix-error() {
     local last_command=$(fc -ln -1)
     local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
 
-    # Construct the prompt for error fixing
+    # Construct the prompt for error fixing and properly escape it
     local prompt=$(echo "I got this error when running: $last_command
 
 Error message:
 $error_output
 
 Please provide just the corrected command without any explanation." | sed 's/"/\\"/g')
+
+    #local prompt=$(printf "I got this error when running: %s\n\nError message:\n%s\n\nPlease provide just the corrected command without any explanation." "$last_command" "$error_output" | sed 's/"/\\"/g' | tr '\n' ' ')
 
     # Use the existing copilot function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
@@ -566,6 +569,12 @@ function zsh-copilot() {
         return $?
     fi
 
+    # Add ask command handling
+    if [[ "$input" =~ ^ask[[:space:]]+(.*) ]]; then
+        ask-command-widget "${match[1]}"
+        return $?
+    fi
+
     while true; do
         history=$history' {"role":"user", "content":"'"$input"'"}'
         if $debug; then
@@ -608,6 +617,7 @@ function zsh-copilot() {
             message='{"role":"'"$assistant"'", "content":"'"$generated_text"'"}'
         else
             local response=$(curl -s -X POST -H "Content-Type: application/json" -H "Authorization: Bearer $api_key" -d $data $api_url)
+
             if $debug || $raw; then
                 echo -E "$response"
             fi
@@ -695,9 +705,22 @@ function ask-command() {
     local request="$1"
 
     # Construct the prompt for command generation
+    local prompt=$(printf "I need a command to: %s\n\nPlease provide just the command without any explanation. Make it a single line that can be executed in a zsh terminal." "$request" | sed 's/"/\\"/g' | tr '\n' ' ')
+
+    # Get the command from copilot
+    local result=$(zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt")
+
+    # Add to next command buffer
+    print -z "$result"
+}
+
+function ask-command-for-widget() {
+    local request="$1"
+
+    # Construct the prompt for command generation
     local prompt=$(echo "I need a command to: $request
 
-Please provide just the command without any explanation. Make it a single line that can be executed in a zsh terminal." | jq -Rs .)
+Please provide just the command without any explanation. Make absolutely sure it is a single line that can be directly executed in a zsh terminal." | jq -Rs .)
 
     # Remove the outer quotes that jq adds
     prompt=${prompt:1:-1}
@@ -705,6 +728,7 @@ Please provide just the command without any explanation. Make it a single line t
     # Use the existing ask function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
+
 
 # Create a ZLE widget for ask-command
 function ask-command-widget() {
@@ -717,7 +741,7 @@ function ask-command-widget() {
     # Only proceed if there's text in the buffer
     if [[ -n "$current_text" ]]; then
         # Run ask-command with current text and store result
-        local result=$(ask-command "$current_text")
+        local result=$(ask-command-for-widget "$current_text")
 
         # Put the result in the command line buffer
         BUFFER="$result"
@@ -753,8 +777,8 @@ bindkey $ZSH_COPILOT_SHORTCUT_FIX fix-error-widget
 
 # Alias
 alias zc="zsh-copilot"
-alias zcf="fix-error"
-alias zca="ask-command"
+alias zcf="zsh-copilot fix"
+alias zca="zsh-copilot ask"
 alias zcp="predict"
 
 # Convert hex back to characters for binding
