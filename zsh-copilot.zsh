@@ -58,7 +58,7 @@ function _setup-zsh-copilot() {
 }
 
 function _zsh_validate_ping_api() {
-    local response_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ZSH_COPILOT_API_KEY" https://api.openai.com/v1/chat/completions)
+    local response_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ZSH_COPILOT_API_KEY" https://api.openai.com/v1/models)
     if [[ $response_code -eq 401 ]]; then
         echo "\033[0;31mError: Invalid API key\033[0m"
         return 1
@@ -99,6 +99,7 @@ function _zsh_copilot_show_help() {
   echo "  config         Configure plugin settings interactively."
   echo "  update           Update the plugin to the latest version."
   echo "  uninstall        Remove the plugin completely."
+  echo "  fix             Fix the last failed command."
 }
 
 function _zsh_copilot_show_version() {
@@ -405,6 +406,23 @@ function _zsh_copilot_detect_shortcut() {
     echo "$hex_sequence"
 }
 
+function fix-error() {
+    # Get the last command and its error message
+    local last_command=$(fc -ln -1)
+    local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
+
+    # Construct the prompt for error fixing
+    local prompt=$(echo "I got this error when running: $last_command
+
+Error message:
+$error_output
+
+Please provide just the corrected command without any explanation." | sed 's/"/\\"/g')
+
+    # Use the existing copilot function with specific parameters
+    zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
+}
+
 function zsh-copilot() {
     # Check and install prerequisites
     if ! _zsh_copilot_install_prerequisites; then
@@ -539,6 +557,12 @@ function zsh-copilot() {
     # Add update command handling
     if [[ "$input" == "update" ]]; then
         _zsh_copilot_update
+        return $?
+    fi
+
+    # Add fix command handling
+    if [[ "$input" == "fix" ]]; then
+        fix-error
         return $?
     fi
 
@@ -702,26 +726,6 @@ function ask-command-widget() {
 
     # Redisplay the command line with the suggestion
     zle redisplay
-}
-
-function fix-error() {
-    # Get the last command and its error message
-    local last_command=$(fc -ln -1)
-    local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
-
-    # Construct the prompt for error fixing
-    local prompt=$(echo "I got this error when running: $last_command
-
-Error message:
-$error_output
-
-Please provide just the corrected command without any explanation." | jq -Rs .)
-
-    # Remove the outer quotes that jq adds
-    prompt=${prompt:1:-1}
-
-    # Use the existing copilot function with specific parameters
-    zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
 
 # Create a ZLE widget for fix-error
