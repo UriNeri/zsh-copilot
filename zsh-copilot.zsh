@@ -47,6 +47,14 @@ function _setup-zsh-copilot() {
     typeset -g ZSH_COPILOT_INITIALROLE="system"
     (( ! ${+ZSH_COPILOT_INITIALPROMPT} )) &&
     typeset -g ZSH_COPILOT_INITIALPROMPT="You are a large language model trained by OpenAI. Answer as concisely as possible.\nKnowledge cutoff: {knowledge_cutoff} Current date: {current_date}"
+
+    # Default shortcuts
+    (( ! ${+ZSH_COPILOT_SHORTCUT_PREDICT} )) &&
+    typeset -g ZSH_COPILOT_SHORTCUT_PREDICT="cf80"
+    (( ! ${+ZSH_COPILOT_SHORTCUT_ASK} )) &&
+    typeset -g ZSH_COPILOT_SHORTCUT_ASK="e6"
+    (( ! ${+ZSH_COPILOT_SHORTCUT_FIX} )) &&
+    typeset -g ZSH_COPILOT_SHORTCUT_FIX="c692"
 }
 _setup-zsh-copilot
 
@@ -80,17 +88,18 @@ function _zsh_copilot_show_version() {
 function _zsh_copilot_configure() {
     local env_file="$ZSH_COPILOT_PREFIX/.env"
 
-    # Show current configuration
-    function show_current_config() {
-        echo "\033[0;34mCurrent Configuration:\033[0m"
-        echo "\033[1;33m1.\033[0m Model: ${ZSH_COPILOT_MODEL}"
-        echo "\033[1;33m2.\033[0m Max Tokens: ${ZSH_COPILOT_TOKENS}"
-        echo "\033[1;33m3.\033[0m API Key: ${ZSH_COPILOT_API_KEY}"
-        echo "\033[1;33m4.\033[0m Predict Shortcut: ${ZSH_COPILOT_SHORTCUT_PREDICT}"
-        echo "\033[1;33m5.\033[0m Ask Shortcut: ${ZSH_COPILOT_SHORTCUT_ASK}"
-        echo "\033[1;33m6.\033[0m Fix Shortcut: ${ZSH_COPILOT_SHORTCUT_FIX}"
-        echo "\033[1;33m7.\033[0m Exit"
-    }
+    # Create .env file if it doesn't exist
+    if [[ ! -f "$env_file" ]]; then
+        echo "\033[0;34mCreating new .env file...\033[0m"
+        cat > "$env_file" << EOL
+ZSH_COPILOT_MODEL=${ZSH_COPILOT_MODEL}
+ZSH_COPILOT_TOKENS=${ZSH_COPILOT_TOKENS}
+ZSH_COPILOT_API_KEY=${ZSH_COPILOT_API_KEY}
+ZSH_COPILOT_SHORTCUT_PREDICT=${ZSH_COPILOT_SHORTCUT_PREDICT}
+ZSH_COPILOT_SHORTCUT_ASK=${ZSH_COPILOT_SHORTCUT_ASK}
+ZSH_COPILOT_SHORTCUT_FIX=${ZSH_COPILOT_SHORTCUT_FIX}
+EOL
+    fi
 
     # Update configuration
     function update_config() {
@@ -98,22 +107,33 @@ function _zsh_copilot_configure() {
         local value=$2
         local param_name=$3
 
-        # Create backup
-        cp "$env_file" "$env_file.backup"
+        # Create backup only if file exists
+        if [[ -f "$env_file" ]]; then
+            cp "$env_file" "$env_file.backup"
+        fi
 
-        # Update parameter
-        sed -i.bak "s|$param=.*|$param=$value|" "$env_file"
+        if grep -q "^$param=" "$env_file"; then
+            # Update existing parameter
+            sed -i.bak "s|^$param=.*|$param=$value|" "$env_file"
+        else
+            # Add new parameter
+            echo "$param=$value" >> "$env_file"
+        fi
 
         if [ $? -eq 0 ]; then
             echo "\033[0;32m$param_name updated successfully!\033[0m"
             source "$env_file"
         else
-            echo "\033[0;31mFailed to update $param_name. Restoring backup...\033[0m"
-            mv "$env_file.backup" "$env_file"
+            echo "\033[0;31mFailed to update $param_name.\033[0m"
+            if [[ -f "$env_file.backup" ]]; then
+                mv "$env_file.backup" "$env_file"
+                echo "\033[0;34mRestored from backup.\033[0m"
+            fi
         fi
 
         # Clean up
         rm -f "$env_file.bak"
+        rm -f "$env_file.backup"
     }
 
     while true; do
@@ -146,19 +166,25 @@ function _zsh_copilot_configure() {
                 fi
                 ;;
             4)
-                echo "\033[0;34mEnter new predict shortcut (e.g., π):\033[0m"
-                read new_predict
-                update_config "ZSH_COPILOT_SHORTCUT_PREDICT" "$new_predict" "Predict shortcut"
+                echo "\033[0;34mPress the desired shortcut for predict command:\033[0m"
+                local sequence=$(_zsh_copilot_detect_shortcut)
+                if [[ -n "$sequence" ]]; then
+                    update_config "ZSH_COPILOT_SHORTCUT_PREDICT" "$sequence" "Predict shortcut"
+                fi
                 ;;
             5)
-                echo "\033[0;34mEnter new ask shortcut (e.g., æ):\033[0m"
-                read new_ask
-                update_config "ZSH_COPILOT_SHORTCUT_ASK" "$new_ask" "Ask shortcut"
+                echo "\033[0;34mPress the desired shortcut for ask command:\033[0m"
+                local sequence=$(_zsh_copilot_detect_shortcut)
+                if [[ -n "$sequence" ]]; then
+                    update_config "ZSH_COPILOT_SHORTCUT_ASK" "$sequence" "Ask shortcut"
+                fi
                 ;;
             6)
-                echo "\033[0;34mEnter new fix shortcut (e.g., ƒ):\033[0m"
-                read new_fix
-                update_config "ZSH_COPILOT_SHORTCUT_FIX" "$new_fix" "Fix shortcut"
+                echo "\033[0;34mPress the desired shortcut for fix command:\033[0m"
+                local sequence=$(_zsh_copilot_detect_shortcut)
+                if [[ -n "$sequence" ]]; then
+                    update_config "ZSH_COPILOT_SHORTCUT_FIX" "$sequence" "Fix shortcut"
+                fi
                 ;;
             7)
                 echo "\033[0;32mConfiguration complete!\033[0m"
@@ -310,6 +336,41 @@ function _zsh_copilot_install_prerequisites() {
     else
         return 1
     fi
+}
+
+function _zsh_copilot_detect_shortcut() {
+    # Enable raw input mode
+    stty raw -echo
+
+    # Read key sequence
+    local key=""
+    local sequence=""
+
+    # Read first character
+    read -k1 key
+    sequence+=$key
+
+    # Handle escape sequences
+    if [[ $key == $'\e' ]]; then
+        # Read potential modifiers and key
+        read -k1 -t 0.1 key
+        sequence+=$key
+        if [[ $key == "[" ]]; then
+            read -k1 -t 0.1 key
+            sequence+=$key
+            # Read any additional characters
+            while read -k1 -t 0.1 key; do
+                sequence+=$key
+            done
+        fi
+    fi
+
+    # Restore terminal settings
+    stty -raw echo
+
+    # Convert to hex and store in variable
+    local hex_sequence=$(echo -n "$sequence" | xxd -p)
+    echo "$hex_sequence"
 }
 
 function zsh-copilot() {
@@ -659,3 +720,13 @@ alias zc="zsh-copilot"
 alias zcf="fix-error"
 alias zca="ask-command"
 alias zcp="predict"
+
+# Convert hex back to characters for binding
+function _hex_to_char() {
+    echo -n "${(#)$(echo -n $1 | sed 's/\([0-9a-f]\{2\}\)/\\x\1/g')}"
+}
+
+# Bind the shortcuts
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget
