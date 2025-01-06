@@ -56,7 +56,27 @@ function _setup-zsh-copilot() {
     (( ! ${+ZSH_COPILOT_SHORTCUT_FIX} )) &&
     typeset -g ZSH_COPILOT_SHORTCUT_FIX="c692"
 }
+
+function _zsh_validate_ping_api() {
+    local response_code=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ZSH_COPILOT_API_KEY" https://api.openai.com/v1/chat/completions)
+    if [[ $response_code -eq 401 ]]; then
+        echo "\033[0;31mError: Invalid API key\033[0m"
+        return 1
+    elif [[ $response_code -eq 429 ]]; then
+        echo "\033[0;31mError: Rate limit exceeded\033[0m"
+        return 1
+    elif [[ $response_code -eq 000 ]]; then
+        echo "\033[0;31mError: Could not connect to OpenAI API. Please check your internet connection.\033[0m"
+        return 1
+    elif [[ $response_code -ne 200 ]]; then
+        echo "\033[0;31mError: API returned status code $response_code\033[0m"
+        return 1
+    fi
+    return 0
+}
+
 _setup-zsh-copilot
+_zsh_validate_ping_api
 
 function _zsh_copilot_show_help() {
   echo "Fix, predict, and ask commands using your command line Copilot powered by LLMs."
