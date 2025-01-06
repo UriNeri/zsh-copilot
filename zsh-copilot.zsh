@@ -50,9 +50,9 @@ function _setup-zsh-copilot() {
 
     # Default shortcuts
     (( ! ${+ZSH_COPILOT_SHORTCUT_PREDICT} )) &&
-    typeset -g ZSH_COPILOT_SHORTCUT_PREDICT="cf80"
+    typeset -g ZSH_COPILOT_SHORTCUT_PREDICT="c593"
     (( ! ${+ZSH_COPILOT_SHORTCUT_ASK} )) &&
-    typeset -g ZSH_COPILOT_SHORTCUT_ASK="e6"
+    typeset -g ZSH_COPILOT_SHORTCUT_ASK="c3a6"
     (( ! ${+ZSH_COPILOT_SHORTCUT_FIX} )) &&
     typeset -g ZSH_COPILOT_SHORTCUT_FIX="c692"
 }
@@ -432,7 +432,9 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
 
 
 function fix-error-for-widget() {
-    local request="$1"
+    # Get the last command and its error message
+    local last_command=$(fc -ln -1)
+    local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
 
     # Construct the prompt for command generation
     local prompt=$(echo "I got this error when running: $last_command
@@ -778,7 +780,7 @@ function ask-command-widget() {
 # Create a ZLE widget for fix-error
 function fix-error-widget() {
     # Run fix-error and store result
-    local result=$(fix-error)
+    local result=$(fix-error-for-widget)
 
     # Put the result in the command line buffer
     BUFFER="$result"
