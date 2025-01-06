@@ -1,8 +1,14 @@
-# zsh-ask
+# zsh-copilot
 
-A lightweight Zsh plugin serves as a ChatGPT API frontend, enabling you to interact with ChatGPT directly from the `Zsh` shell using only `cURL` and `jq`.
+A lightweight Zsh plugin that predict your next command using llm. You can also ask to create a command.
 
 ## Installation
+
+## Preliminaries
+
+Make sure you have [`cURL`](https://curl.se/) and [`jq`](https://stedolan.github.io/jq/) installed.
+
+If you would like to have markdown rendering with option `-m`, [`glow`](https://github.com/charmbracelet/glow) is required (Recommend).
 
 Acquire your private api-key from [OpenAI](https://platform.openai.com/account/api-keys).
 
@@ -48,12 +54,6 @@ Run the command:
 zsh-copilot uninstall
 ```
 
-## Preliminaries
-
-Make sure you have [`cURL`](https://curl.se/) and [`jq`](https://stedolan.github.io/jq/) installed.
-
-If you would like to have markdown rendering with option `-m`, [`glow`](https://github.com/charmbracelet/glow) is required (Recommend).
-
 ## Features
 
 ### Direct ChatGPT Interaction
@@ -64,6 +64,28 @@ Fill your OpenAI api key as `ZSH_ASK_API_KEY` (see [INSTALL.md](INSTALL.md) for 
 
 ```
 zsh-copilot who are you
+```
+
+To fix previous command error.
+
+```
+zsh-copilot fix
+```
+
+Note: You can also use `zcf` instead of `zsh-copilot fix`.
+
+To ask to create a command.
+
+```
+zsh-copilot ask <command to generate>
+```
+
+Note: You can also use `zca` instead of `zsh-copilot ask`.
+
+For instance, you can ask to create a command to search for a file in the current directory.
+
+```
+zsh-copilot ask search for the file "test.txt" in the current directory
 ```
 
 Use `-c` for dialogue format communication.
@@ -124,6 +146,10 @@ Both features:
 - Support full command-line editing
 
 Have fun!
+
+## Alias
+
+You can use `zsh-copilot` as `zc`. For fixing errors, you can use `zcf`. For asking to create a command, you can use `zca`.
 
 ## License
 
