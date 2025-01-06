@@ -231,39 +231,7 @@ function _zsh_copilot_uninstall() {
 
 function _zsh_copilot_update() {
     echo "\033[0;34mUpdating zsh-copilot...\033[0m"
-
-    # Store current directory
-    local current_dir=$(pwd)
-
-    # Change to plugin directory
-    cd "$ZSH_COPILOT_PREFIX"
-
-    # Backup .env file if it exists
-    if [[ -f ".env" ]]; then
-        cp .env .env.backup
-    fi
-
-    # Pull latest changes
-    if git pull origin main; then
-        echo "\033[0;32mSuccessfully updated zsh-copilot!\033[0m"
-
-        # Restore .env file if it existed
-        if [[ -f ".env.backup" ]]; then
-            mv .env.backup .env
-        fi
-
-        echo "\033[0;34mPlease restart your terminal or run: source ~/.zshrc\033[0m"
-    else
-        echo "\033[0;31mUpdate failed. Please try again or report the issue.\033[0m"
-
-        # Restore .env backup if update failed
-        if [[ -f ".env.backup" ]]; then
-            mv .env.backup .env
-        fi
-    fi
-
-    # Return to original directory
-    cd "$current_dir"
+    zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Gamma-Software/zsh-copilot/refs/heads/master/install.sh)"
 }
 
 function _zsh_copilot_install_prerequisites() {
