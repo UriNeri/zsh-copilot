@@ -17,4 +17,4 @@ if [ "$current_version" != "$new_version" ]; then
     fi
 fi
 
-source ${0:A:h}/zsh-copilot.zsh
+source ${0:A:h}/src/zsh-copilot.zsh
