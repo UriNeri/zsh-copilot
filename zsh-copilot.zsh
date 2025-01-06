@@ -412,15 +412,16 @@ function fix-error() {
     local last_command=$(fc -ln -1)
     local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
 
-    # Construct the prompt for error fixing and properly escape it
+    # Construct the prompt for error fixing
     local prompt=$(echo "I got this error when running: $last_command
 
 Error message:
 $error_output
 
-Please provide just the corrected command without any explanation." | sed 's/"/\\"/g')
+Please provide just the corrected command without any explanation." | jq -Rs .)
 
-    #local prompt=$(printf "I got this error when running: %s\n\nError message:\n%s\n\nPlease provide just the corrected command without any explanation." "$last_command" "$error_output" | sed 's/"/\\"/g' | tr '\n' ' ')
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
 
     # Use the existing copilot function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
