@@ -654,4 +654,8 @@ bindkey $ZSH_COPILOT_SHORTCUT_PREDICT predict-widget
 bindkey $ZSH_COPILOT_SHORTCUT_ASK ask-command-widget
 bindkey $ZSH_COPILOT_SHORTCUT_FIX fix-error-widget
 
+# Alias
 alias zc="zsh-copilot"
+alias zcf="fix-error"
+alias zca="ask-command"
+alias zcp="predict"
