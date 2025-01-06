@@ -9,9 +9,9 @@ current_folder=${0:A:h}
 new_version=$(curl -s https://raw.githubusercontent.com/Gamma-Software/zsh-copilot/refs/heads/master/VERSION)
 current_version=$(cat ${current_folder}/VERSION)
 if [ "$current_version" != "$new_version" ]; then
-    echo -e "${BLUE}A new version (${GREEN}$current_version${BLUE} -> ${GREEN}$new_version${BLUE}) of zsh-copilot is available. Would you like to update it? (y/N)${NC}"
-    read -r update || update="N"
-    if [ "$update" = "y" ]; then
+    echo -e "${BLUE}A new version (${GREEN}$current_version${BLUE} -> ${GREEN}$new_version${BLUE}) of zsh-copilot is available. Would you like to update it? (Y/n)${NC}"
+    read -r update || update="y"
+    if [ "$update" = "y" ] || [ "$update" = "Y" ]; then
         echo -e "${BLUE}Updating zsh-copilot to the latest version...${NC}"
         zsh ${current_folder}/install.sh
     fi
