@@ -231,7 +231,39 @@ function _zsh_copilot_uninstall() {
 
 function _zsh_copilot_update() {
     echo "\033[0;34mUpdating zsh-copilot...\033[0m"
-    zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Gamma-Software/zsh-copilot/refs/heads/master/install.sh)"
+
+    # Store current directory
+    local current_dir=$(pwd)
+
+    # Change to plugin directory
+    cd "$ZSH_COPILOT_PREFIX"
+
+    # Backup .env file if it exists
+    if [[ -f ".env" ]]; then
+        cp .env .env.backup
+    fi
+
+    # Pull latest changes
+    if git pull origin main; then
+        echo "\033[0;32mSuccessfully updated zsh-copilot!\033[0m"
+
+        # Restore .env file if it existed
+        if [[ -f ".env.backup" ]]; then
+            mv .env.backup .env
+        fi
+
+        echo "\033[0;34mPlease restart your terminal or run: source ~/.zshrc\033[0m"
+    else
+        echo "\033[0;31mUpdate failed. Please try again or report the issue.\033[0m"
+
+        # Restore .env backup if update failed
+        if [[ -f ".env.backup" ]]; then
+            mv .env.backup .env
+        fi
+    fi
+
+    # Return to original directory
+    cd "$current_dir"
 }
 
 function _zsh_copilot_install_prerequisites() {
@@ -470,18 +502,19 @@ function zsh-copilot() {
                 fi
                 if ! $raw; then
                     token=${token:6}
-                    if ! $raw && [[ $token =~ '"delta":.*"role":"([^"]*)"' ]]; then
-                        assistant=$match[1]
+                    if ! $raw && delta_text=$(echo -E $token | jq -re '.choices[].delta.role'); then
+                        assistant=$(echo -E $token | jq -je '.choices[].delta.role')
                         if ! $output; then
                             echo -n "\033[0;36m$assistant: \033[0m"
                         fi
                     fi
-                    if [[ $token =~ '"delta":.*"content":"([^"]*)"' ]]; then
+                    local delta_text=""
+                    if delta_text=$(echo -E $token | jq -re '.choices[].delta.content'); then
                         begin=false
-                        echo -E $match[1]
-                        generated_text=$generated_text$match[1]
+                        echo -E $token | jq -je '.choices[].delta.content'
+                        generated_text=$generated_text$delta_text
                     fi
-                    if [[ $token =~ '"finish_reason"' ]]; then
+                    if (echo -E $token | jq -re '.choices[].finish_reason' > /dev/null); then
                         echo ""
                         break
                     fi
@@ -497,15 +530,15 @@ function zsh-copilot() {
                 if ! $output; then
                     echo -n "\033[0;36m$assistant: \033[0m"
                 fi
-                if [[ $response =~ '"error":\{[^}]*\}' ]]; then
+                if echo -E $response | jq -e '.error' > /dev/null; then
                     echo "zsh-copilot \033[0;31merror:\033[0m"
-                    [[ $response =~ '"message":"([^"]*)"' ]] && echo $match[1]
+                    echo -E $response | jq -r '.error'
                     return 1
                 fi
             fi
-            [[ $response =~ '"role":"([^"]*)"' ]] && assistant=$match[1]
-            [[ $response =~ '"content":"([^"]*)"' ]] && generated_text=$match[1]
-            message='{"role":"'"$assistant"'", "content":"'"$generated_text"'"}'
+            assistant=$(echo -E $response | jq -r '.choices[].role')
+            message=$(echo -E $response | jq -r '.choices[].message')
+            generated_text=$(echo -E $message | jq -r '.content')
             if ! $raw; then
                 if $markdown; then
                     echo -E $generated_text | glow
@@ -545,13 +578,15 @@ function predict() {
         done)
 
     # Construct the prompt and escape it properly for JSON
-    local prompt="${${${${(q)current_dir}//\\/\\\\}//\"/\\\"}//\$/\\\$}"
-    prompt="I am in directory: ${prompt}
+    local prompt=$(echo "I am in directory: ${current_dir}
 
 Recent command history:
 ${history_data}
 
-Based on this history and context, what would be the most likely next command I want to run? Provide just the command without explanation."
+Based on this history and context, what would be the most likely next command I want to run? Provide just the command without explanation." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
 
     # Use the existing ask function with specific parameters
     zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
@@ -575,10 +610,12 @@ function ask-command() {
     local request="$1"
 
     # Construct the prompt for command generation
-    local prompt="${${${${(q)request}//\\/\\\\}//\"/\\\"}//\$/\\\$}"
-    prompt="I need a command to: ${prompt}
+    local prompt=$(echo "I need a command to: $request
 
-Please provide just the command without any explanation. Make it a single line that can be executed in a zsh terminal."
+Please provide just the command without any explanation. Make it a single line that can be executed in a zsh terminal." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
 
     # Use the existing ask function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
@@ -612,14 +649,15 @@ function fix-error() {
     local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
 
     # Construct the prompt for error fixing
-    local prompt="${${${${(q)last_command}//\\/\\\\}//\"/\\\"}//\$/\\\$}"
-    local error_output="${${${${(q)error_output}//\\/\\\\}//\"/\\\"}//\$/\\\$}"
-    prompt="I got this error when running: ${prompt}
+    local prompt=$(echo "I got this error when running: $last_command
 
 Error message:
-${error_output}
+$error_output
 
-Please provide just the corrected command without any explanation."
+Please provide just the corrected command without any explanation." | jq -Rs .)
+
+    # Remove the outer quotes that jq adds
+    prompt=${prompt:1:-1}
 
     # Use the existing copilot function with specific parameters
     zsh-copilot -o -M "$ZSH_COPILOT_MODEL" -t $ZSH_COPILOT_TOKENS "$prompt"
