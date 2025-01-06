@@ -247,7 +247,7 @@ function zsh-copilot() {
 
     local usefile=false
     local filepath=""
-    local requirements=("curl")
+    local requirements=("curl" "jq")
     local debug=false
     local raw=false
     local output=false
