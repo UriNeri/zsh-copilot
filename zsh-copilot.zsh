@@ -82,7 +82,7 @@ function _zsh_copilot_show_help() {
   echo "Fix, predict, and ask commands using your command line Copilot powered by LLMs."
   echo "Usage: zsh-copilot [options...]"
   echo "       zsh-copilot [options...] '<your-question>'"
-  echo "       zsh-copilot configure"
+  echo "       zsh-copilot config"
   echo "       zsh-copilot update"
   echo "       zsh-copilot uninstall"
   echo "Aliases: zsh-copilot <-> zc"
@@ -96,7 +96,7 @@ function _zsh_copilot_show_help() {
   echo "  -o                Print only the output."
   echo "  -d                Print debug information."
   echo "Commands:"
-  echo "  configure         Configure plugin settings interactively."
+  echo "  config         Configure plugin settings interactively."
   echo "  update           Update the plugin to the latest version."
   echo "  uninstall        Remove the plugin completely."
 }
@@ -107,6 +107,18 @@ function _zsh_copilot_show_version() {
 
 function _zsh_copilot_configure() {
     local env_file="$ZSH_COPILOT_PREFIX/.env"
+
+    # Show current configuration
+    function show_current_config() {
+        echo "\033[0;34mCurrent Configuration:\033[0m"
+        echo "\033[1;33m1.\033[0m Model: ${ZSH_COPILOT_MODEL}"
+        echo "\033[1;33m2.\033[0m Max Tokens: ${ZSH_COPILOT_TOKENS}"
+        echo "\033[1;33m3.\033[0m API Key: ${ZSH_COPILOT_API_KEY}"
+        echo "\033[1;33m4.\033[0m Predict Shortcut: ${ZSH_COPILOT_SHORTCUT_PREDICT}"
+        echo "\033[1;33m5.\033[0m Ask Shortcut: ${ZSH_COPILOT_SHORTCUT_ASK}"
+        echo "\033[1;33m6.\033[0m Fix Shortcut: ${ZSH_COPILOT_SHORTCUT_FIX}"
+        echo "\033[1;33m7.\033[0m Exit"
+    }
 
     # Create .env file if it doesn't exist
     if [[ ! -f "$env_file" ]]; then
@@ -512,8 +524,8 @@ function zsh-copilot() {
         read -r input
     fi
 
-    # Add configure command handling
-    if [[ "$input" == "configure" ]]; then
+    # Add config command handling
+    if [[ "$input" == "config" ]]; then
         _zsh_copilot_configure
         return $?
     fi
