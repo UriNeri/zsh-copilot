@@ -234,7 +234,91 @@ function _zsh_copilot_update() {
     zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Gamma-Software/zsh-copilot/refs/heads/master/install.sh)"
 }
 
+function _zsh_copilot_install_prerequisites() {
+    local os_type=$(uname -s)
+    local missing_deps=()
+
+    # Check for curl
+    if ! command -v curl >/dev/null 2>&1; then
+        missing_deps+=("curl")
+    fi
+
+    # Check for jq
+    if ! command -v jq >/dev/null 2>&1; then
+        missing_deps+=("jq")
+    fi
+
+    if [[ ${#missing_deps[@]} -eq 0 ]]; then
+        return 0
+    fi
+
+    echo "\033[0;34mInstalling missing dependencies: ${missing_deps[*]}\033[0m"
+
+    case "$os_type" in
+        Linux*)
+            if command -v apt-get >/dev/null 2>&1; then
+                sudo apt-get update && sudo apt-get install -y ${missing_deps[@]}
+            elif command -v dnf >/dev/null 2>&1; then
+                sudo dnf install -y ${missing_deps[@]}
+            elif command -v yum >/dev/null 2>&1; then
+                sudo yum install -y ${missing_deps[@]}
+            elif command -v pacman >/dev/null 2>&1; then
+                sudo pacman -Sy --noconfirm ${missing_deps[@]}
+            else
+                echo "\033[0;31mUnable to detect package manager. Please install ${missing_deps[*]} manually.\033[0m"
+                return 1
+            fi
+            ;;
+        Darwin*)
+            if ! command -v brew >/dev/null 2>&1; then
+                echo "\033[0;34mInstalling Homebrew...\033[0m"
+                /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+            fi
+            brew install ${missing_deps[@]}
+            ;;
+        MINGW*|MSYS*|CYGWIN*)
+            # Windows handling
+            if [[ " ${missing_deps[@]} " =~ " jq " ]]; then
+                echo "\033[0;34mInstalling jq for Windows...\033[0m"
+                mkdir -p /usr/bin
+                curl -L -o /usr/bin/jq.exe https://github.com/jqlang/jq/releases/latest/download/jq-win64.exe
+                chmod +x /usr/bin/jq.exe
+            fi
+            if [[ " ${missing_deps[@]} " =~ " curl " ]]; then
+                echo "\033[0;31mcurl is required but not installed. Please install Git for Windows which includes curl.\033[0m"
+                return 1
+            fi
+            ;;
+        *)
+            echo "\033[0;31mUnsupported operating system: $os_type\033[0m"
+            return 1
+            ;;
+    esac
+
+    # Verify installation
+    local failed=0
+    for dep in ${missing_deps[@]}; do
+        if ! command -v $dep >/dev/null 2>&1; then
+            echo "\033[0;31mFailed to install $dep\033[0m"
+            failed=1
+        fi
+    done
+
+    if [[ $failed -eq 0 ]]; then
+        echo "\033[0;32mAll dependencies installed successfully!\033[0m"
+        return 0
+    else
+        return 1
+    fi
+}
+
 function zsh-copilot() {
+    # Check and install prerequisites
+    if ! _zsh_copilot_install_prerequisites; then
+        echo "\033[0;31mFailed to install required dependencies. Please install them manually.\033[0m"
+        return 1
+    fi
+
     local api_url=$ZSH_COPILOT_API_URL
     local api_key=$ZSH_COPILOT_API_KEY
     local conversation=$ZSH_COPILOT_CONVERSATION
