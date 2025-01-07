@@ -147,7 +147,7 @@ function _zsh_copilot_uninstall() {
 
     # Determine ZSH_CUSTOM path if not set
     if [ -z "$ZSH_CUSTOM" ]; then
-        ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+        ZSH_CUSTOM="$HOME/.oh-my-zsh"
     fi
 
     PLUGIN_DIR="$ZSH_CUSTOM/plugins/$PLUGIN_NAME"

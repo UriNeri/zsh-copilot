@@ -12,7 +12,7 @@ REPO_URL="https://github.com/Gamma-Software/zsh-copilot"  # Update this with you
 
 # Determine ZSH_CUSTOM path
 if [ -z "$ZSH_CUSTOM" ]; then
-    ZSH_CUSTOM="$HOME/.oh-my-zsh/custom"
+    ZSH_CUSTOM="$HOME/.oh-my-zsh"
 fi
 
 PLUGIN_DIR="$ZSH_CUSTOM/plugins/$PLUGIN_NAME"

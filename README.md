@@ -22,10 +22,10 @@ zsh -c "$(curl -fsSL https://raw.githubusercontent.com/Gamma-Software/zsh-copilo
 
 ### Manual (Git Clone)
 
-1. Clone this repository into `$ZSH_CUSTOM/plugins` (by default `~/.oh-my-zsh/custom/plugins`)
+1. Clone this repository into `$ZSH_CUSTOM/plugins` (by default `~/.oh-my-zsh/plugins`)
 
 ```sh
-git clone https://github.com/Gamma-Software/zsh-copilot ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-copilot
+git clone https://github.com/Gamma-Software/zsh-copilot ${ZSH_CUSTOM:-~/.oh-my-zsh}/plugins/zsh-copilot
 ```
 
 2. Add the plugin to the list of plugins for Oh My Zsh to load (inside `~/.zshrc`):
