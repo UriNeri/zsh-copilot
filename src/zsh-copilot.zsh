@@ -10,8 +10,6 @@ source "${ZSH_COPILOT_PREFIX}/utils.zsh"
 source "${ZSH_COPILOT_PREFIX}/config.zsh"
 source "${ZSH_COPILOT_PREFIX}/commands.zsh"
 source "${ZSH_COPILOT_PREFIX}/widgets.zsh"
-source "${ZSH_COPILOT_PREFIX}/aliases.zsh"
-
 # Initialize the plugin
 _setup-zsh-copilot
 _zsh_validate_ping_api
@@ -243,3 +241,6 @@ function zsh-copilot() {
         fi
     done
 }
+
+source "${ZSH_COPILOT_PREFIX}/aliases.zsh"
+source "${ZSH_COPILOT_PREFIX}/hooks.zsh"

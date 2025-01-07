@@ -48,8 +48,3 @@ function fix-error-widget() {
 zle -N fix-error-widget
 zle -N predict-widget
 zle -N ask-command-widget
-
-# Bind the shortcuts
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget
