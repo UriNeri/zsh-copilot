@@ -242,5 +242,18 @@ function zsh-copilot() {
     done
 }
 
-source "${ZSH_COPILOT_PREFIX}/aliases.zsh"
-source "${ZSH_COPILOT_PREFIX}/hooks.zsh"
+# Add error reminder hook
+autoload -U add-zsh-hook
+add-zsh-hook precmd _zsh_copilot_error_reminder
+
+# Alias
+alias zc="zsh-copilot"
+alias zcf="zsh-copilot fix"
+alias zca="zsh-copilot ask"
+alias zcp="predict"
+
+# Bind the shortcuts
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
+echo "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)"
+bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget
