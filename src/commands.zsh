@@ -10,7 +10,7 @@ function fix-error() {
 Error message:
 $error_output
 
-Please provide just the corrected command without any explanation." | jq -Rs .)
+Please provide just the corrected command without any explanation like 'echo 'Hello, world!' or 'ls -la' or 'git status' etc." | jq -Rs .)
 
     # Remove the outer quotes that jq adds
     prompt=${prompt:1:-1}
