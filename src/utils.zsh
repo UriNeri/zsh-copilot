@@ -49,8 +49,10 @@ function _hex_to_char() {
 
 function _zsh_copilot_error_reminder() {
     local exit_code=$?
-    # Only show message for non-zero exit codes and ignore common status codes
-    if [ $exit_code -ne 0 ] && [ $exit_code -ne 130 ] && [ $exit_code -ne 141 ]; then
+    # Get the last executed command from history
+    local last_cmd=$(fc -ln -1)
+    # Only show message for non-zero exit codes, ignore common status codes, and non-empty commands
+    if [ $exit_code -ne 0 ] && [ $exit_code -ne 130 ] && [ $exit_code -ne 141 ] && [ ! -z "$last_cmd" ] && [ "$last_cmd" != "_zsh_copilot_error_reminder" ]; then
         echo "\033[0;33mTip: Run 'zsh-copilot fix' or 'zcf' to get a suggested fix for this error.\033[0m"
     fi
     return $exit_code
