@@ -213,7 +213,7 @@ function _zsh_validate_ping_api() {
 }
 
 function _zsh_copilot_show_version() {
-    cat "$ZSH_COPILOT_PREFIX/VERSION"
+    cat "$ZSH_COPILOT_PREFIX/../VERSION"
 }
 
 function _zsh_copilot_show_help() {
