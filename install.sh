@@ -93,13 +93,6 @@ fi
 # Set appropriate permissions
 chmod 755 "$PLUGIN_DIR"/*.zsh
 
-echo -e "${BLUE}Would you like to source ~/.zshrc now? (y/N)${NC}"
-read -r REPLY
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    source ~/.zshrc
-    echo -e "${GREEN}Configuration loaded!${NC}"
-else
-    echo -e "${BLUE}Please restart your terminal or run: source ~/.zshrc${NC}"
-fi
+echo -e "${BLUE}Please restart your terminal or run: source ~/.zshrc${NC}"
 
 exit 0
