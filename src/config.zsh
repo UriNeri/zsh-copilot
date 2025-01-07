@@ -148,21 +148,21 @@ EOL
                 ;;
             4)
                 echo "\033[0;34mPress the desired shortcut for predict command:\033[0m"
-                local sequence=$(_zsh_copilot_detect_shortcut)
+                local sequence=$(_zsh_copilot_read_shortcut)
                 if [[ -n "$sequence" ]]; then
                     update_config "ZSH_COPILOT_SHORTCUT_PREDICT" "$sequence" "Predict shortcut"
                 fi
                 ;;
             5)
                 echo "\033[0;34mPress the desired shortcut for ask command:\033[0m"
-                local sequence=$(_zsh_copilot_detect_shortcut)
+                local sequence=$(_zsh_copilot_read_shortcut)
                 if [[ -n "$sequence" ]]; then
                     update_config "ZSH_COPILOT_SHORTCUT_ASK" "$sequence" "Ask shortcut"
                 fi
                 ;;
             6)
                 echo "\033[0;34mPress the desired shortcut for fix command:\033[0m"
-                local sequence=$(_zsh_copilot_detect_shortcut)
+                local sequence=$(_zsh_copilot_read_shortcut)
                 if [[ -n "$sequence" ]]; then
                     update_config "ZSH_COPILOT_SHORTCUT_FIX" "$sequence" "Fix shortcut"
                 fi

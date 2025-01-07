@@ -253,6 +253,6 @@ alias zca="zsh-copilot ask"
 alias zcp="predict"
 
 # Bind the shortcuts
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
-bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget
+bindkey "$($ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
+bindkey "$($ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
+bindkey "$($ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget

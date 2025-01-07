@@ -34,6 +34,15 @@ function _zsh_copilot_detect_shortcut() {
     echo "$hex_sequence"
 }
 
+function _zsh_copilot_read_shortcut() {
+    # Read text input
+    local text=""
+    read text
+
+    # Convert to hex and store in variable
+    echo "$text"
+}
+
 function _hex_to_char() {
     echo -n "${(#)$(echo -n $1 | sed 's/\([0-9a-f]\{2\}\)/\\x\1/g')}"
 }
