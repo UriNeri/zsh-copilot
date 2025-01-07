@@ -20,7 +20,9 @@ function _show_logo() {
                               |_|
 
     MIT License 2025 Valentin Rudloff (https://valentin.pival.fr)
-    https://github.com/Gamma-Software/zsh-copilot
+    Repo: https://github.com/Gamma-Software/zsh-copilot
+    Version: $(cat VERSION)
+
 EOF
 }
 
