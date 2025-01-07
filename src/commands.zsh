@@ -1,5 +1,5 @@
 # Commands like fix-error, ask-command, etc.
-function _zsh_copilot_fix_error() {
+function fix-error() {
     # Get the last command and its error message
     local last_command=$(fc -ln -1)
     local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
@@ -23,7 +23,7 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
 }
 
 
-function _zsh_copilot_fix_error_for_widget() {
+function fix-error-for-widget() {
     # Get the last command and its error message
     local last_command=$(fc -ln -1)
     local error_output=$(fc -ln -1 | sh 2>&1 >/dev/null)
@@ -44,7 +44,7 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
 }
 
 
-function _zsh_copilot_ask_command() {
+function ask_command() {
     local request="$1"
 
     # Construct the prompt for command generation
@@ -57,7 +57,7 @@ function _zsh_copilot_ask_command() {
     print -z "$result"
 }
 
-function _zsh_copilot_ask_command_for_widget() {
+function ask-command-for-widget() {
     local request="$1"
 
     # Construct the prompt for command generation
@@ -100,9 +100,3 @@ Based on this history and context, what would be the most likely next command I 
     # Use the existing ask function with specific parameters
     zsh-copilot -o -M "gpt-4" -t $ZSH_COPILOT_TOKENS "$prompt"
 }
-
-# Make the internal function private and read-only
-typeset -fr _zsh_copilot_ask_command
-typeset -fr _zsh_copilot_ask_command_for_widget
-typeset -fr _zsh_copilot_fix_error
-typeset -fr _zsh_copilot_fix_error_for_widget
