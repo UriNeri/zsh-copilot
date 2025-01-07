@@ -10,6 +10,22 @@ NC='\033[0m' # No Color
 PLUGIN_NAME="zsh-copilot"
 REPO_URL="https://github.com/Gamma-Software/zsh-copilot"  # Update this with your actual repo URL
 
+function _show_logo() {
+    cat << 'EOF'
+         _                           _ _       _
+ _______| |__         ___ ___  _ __ (_) | ___ | |_
+|_  / __| '_ \ _____ / __/ _ \| '_ \| | |/ _ \| __|
+ / /\__ \ | | |_____| (_| (_) | |_) | | | (_) | |_
+/___|___/_| |_|      \___\___/| .__/|_|_|\___/ \__|
+                              |_|
+
+    MIT License 2025 Valentin Rudloff (https://valentin.pival.fr)
+    https://github.com/Gamma-Software/zsh-copilot
+EOF
+}
+
+_show_logo
+
 # Determine ZSH_CUSTOM path
 if [ -z "$ZSH_CUSTOM" ]; then
     ZSH_CUSTOM="$HOME/.oh-my-zsh"
