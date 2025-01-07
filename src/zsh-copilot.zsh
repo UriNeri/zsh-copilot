@@ -255,5 +255,4 @@ alias zcp="predict"
 # Bind the shortcuts
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_PREDICT)" predict-widget
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_ASK)" ask-command-widget
-echo "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)"
 bindkey "$(_hex_to_char $ZSH_COPILOT_SHORTCUT_FIX)" fix-error-widget

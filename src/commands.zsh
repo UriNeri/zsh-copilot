@@ -44,7 +44,7 @@ Please provide just the corrected command without any explanation." | jq -Rs .)
 }
 
 
-function ask_command() {
+function ask-command() {
     local request="$1"
 
     # Construct the prompt for command generation
