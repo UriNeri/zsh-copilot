@@ -2,9 +2,11 @@
 function _setup-zsh-copilot() {
     # Set the plugin directory as the prefix
     typeset -g ZSH_COPILOT_PREFIX=${SCRIPT_PATH:A:h}
+    typeset -g ZSH_COPILOT_PLUGIN_DIR=${ZSH_COPILOT_PREFIX}/../
+
     # Source .env file if it exists
-    if [[ -f "$ZSH_COPILOT_PREFIX/.env" ]]; then
-        source "$ZSH_COPILOT_PREFIX/.env"
+    if [[ -f "$ZSH_COPILOT_PLUGIN_DIR/.env" ]]; then
+        source "$ZSH_COPILOT_PLUGIN_DIR/.env"
     fi
 
     (( ! ${+ZSH_COPILOT_REPO} )) &&
@@ -53,7 +55,7 @@ function _setup-zsh-copilot() {
 }
 
 function _zsh_copilot_configure() {
-    local env_file="$ZSH_COPILOT_PREFIX/.env"
+    local env_file="$ZSH_COPILOT_PLUGIN_DIR/.env"
 
     # Show current configuration
     function show_current_config() {

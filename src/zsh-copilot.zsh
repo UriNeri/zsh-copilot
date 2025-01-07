@@ -3,6 +3,7 @@
 
 SCRIPT_PATH=${(%):-%x}
 ZSH_COPILOT_PREFIX=${SCRIPT_PATH:A:h}
+ZSH_COPILOT_PLUGIN_DIR=${ZSH_COPILOT_PREFIX}/../
 
 # Source all components
 source "${ZSH_COPILOT_PREFIX}/utils.zsh"
