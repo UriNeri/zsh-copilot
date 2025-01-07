@@ -183,9 +183,6 @@ function _zsh_copilot_uninstall() {
 
     echo "\033[0;32mUninstallation complete!\033[0m"
     echo "\033[0;34mPlease restart your terminal or run: source ~/.zshrc\033[0m"
-
-    # Exit the shell since we just removed the current script
-    exit 0
 }
 
 function _zsh_validate_ping_api() {
